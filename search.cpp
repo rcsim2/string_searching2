@@ -248,8 +248,7 @@ int main(int argc, char *argv[]) {
     // NEW: set file pointer to begin of file
     //fseek(fpFile, 0, SEEK_SET) ;
 
-
-
+    // We keep this to check if the result matches with the other search algos.
     // TEST: find_str_in_file()
     FILE *stream;
     if( (stream = fopen(argv[1], "rb")) == NULL ) {
@@ -335,21 +334,53 @@ int main(int argc, char *argv[]) {
 
             // Michael Abrash's Blackbook
             // Optimized brute-force
+            //
+            // NOTE: SearchForString takes the number of candidate match starts, so keep
+            // passing BlockSearchLength.
+            // SearchForString uses its SearchLength argument as the number of bytes memchr
+            // scans for the pattern’s first character. Each hit is a candidate start; memcmp
+            // then checks whether the rest of the pattern matches.
+            // For example, with 10 valid bytes and a 4-byte pattern, the pattern can start at
+            // offsets 0 through 6—7 candidates. BlockSearchLength is 7, so the function checks
+            // only those starts. If it scanned all 10 bytes (WorkingLength), it could find the
+            // first pattern character at offset 7, 8, or 9, where the full pattern doesn’t fit.
+            // That’s why SearchForString should receive BlockSearchLength, while algorithms
+            // that expect the total text-buffer length should receive WorkingLength.
+            //
             //if ( SearchForString(WorkingBlock, BlockSearchLength, SearchString, SearchStringLength) )
             
+
             // Robert Sedgewick's Algorithms in C
             // Boyer-Moore
-            if ( bmsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            //
+            // NOTE: Must use WorkingLength here instead of BlockSearchLength. 
+            // Otherwise we fail to find the search string when it is at the very end
+            // of the file.
+            // See comment in algorithm.h
+            // WorkingLength is the number of valid bytes currently in the buffer. It includes any bytes carried over from the previous block.
+            // BlockSearchLength is the number of valid starting positions where the entire search string could fit in those bytes:
+            // So: BlockSearchLength = WorkingLength - SearchStringLength + 1;
+            //
+            // ERROR:
+            // if ( bmsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            //if ( bmsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength) )
             
+
             // Bob Stout's Code Snippets
             // Pratt-Boyer-Moore
-            //if ( strsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            // ERROR: finds incorrect position for [Frame 868]
+            // FIXED: see comment in algorithm.h
+            //if ( strsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength) )
             // Boyer-Moore-Horspool
-            //if ( bmh_search((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            //if ( bmh_search((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength) )
             
+
             // Thierry Lecroq's Exact String Matching Algorithms
             //if ( SearchBF((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
-            //if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
+            // ERROR: if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
+            // We need WorkingLength not BlockSearchLength. Otherwise we fail to find
+            // the search string when it is at the very end of the file.
+            //if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength) )
             //if ( SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTUNEDBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )

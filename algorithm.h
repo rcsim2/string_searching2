@@ -48,6 +48,10 @@ int *bminit(char *string, size_t sz)
 // 0.000000X
 // It needs the extra character after the 0.000000 to find it.
 // It is the working space it needs.
+// HELL: The error was in the calling code:
+// bmsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength)
+// Must be:
+// bmsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength)
 int bmsearch(char *buffer, size_t M, char *sequence, size_t N)
 {
 	int i,j,t;
@@ -132,7 +136,9 @@ int strsearch(const char *string, const int stringlen,
     /* register */ size_t shift;
     /* register */ size_t pos = len - 1;
     char *here;
-    size_t limit=strlen(string);
+    // ERROR: need correct limit for search string length
+    //size_t limit=strlen(string);
+    size_t limit=stringlen;
 
 	// NEW: save initial Buffer begin
 	pdest = (unsigned char*)string;	
@@ -279,16 +285,18 @@ const int XSIZE = 512; // maximum search pattern size
 
 // Brute Force (From: Thierry Lecroq) //////////////////////////
 int SearchBF(char *x, int m, char *y, int n) { 
-  char *yb; 
-  /* Searching */ 
-  for (yb = y; *y != EOS; ++y) 
-	  if (memcmp(x, y, m) == 0) {
-		  //OUTPUT(y - yb);
-		  // NEW: get position of search string in the buffer
-		  result = y - yb;
-		  return 1; // match
-	  }
-  return 0; // no match
+    char *yb; 
+    /* Searching */
+    // ERROR:
+    //for (yb = y; *y != EOS; ++y)
+    for (yb = y; n > 0; ++y, --n)
+        if (memcmp(x, y, m) == 0) {
+            //OUTPUT(y - yb);
+            // NEW: get position of search string in the buffer
+            result = y - yb;
+            return 1; // match
+        }
+    return 0; // no match
 }
 ////////////////////////////////////////////////////////////////
 
