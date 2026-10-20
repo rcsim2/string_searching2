@@ -361,8 +361,7 @@ int main(int argc, char *argv[]) {
             // BlockSearchLength is the number of valid starting positions where the entire search string could fit in those bytes:
             // So: BlockSearchLength = WorkingLength - SearchStringLength + 1;
             //
-            // ERROR:
-            // if ( bmsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            // ERROR: if ( bmsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
             //if ( bmsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength) )
             
 
@@ -370,6 +369,7 @@ int main(int argc, char *argv[]) {
             // Pratt-Boyer-Moore
             // ERROR: finds incorrect position for [Frame 868]
             // FIXED: see comment in algorithm.h
+            // NOTE: Must use WorkingLength here instead of BlockSearchLength.
             //if ( strsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength) )
             // Boyer-Moore-Horspool
             //if ( bmh_search((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength) )
