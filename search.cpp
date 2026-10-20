@@ -274,12 +274,13 @@ int main(int argc, char *argv[]) {
     /////////////////////////////////////////////
 
 
-// TEST: restart the search using goto.
-// Ugly but works
-// NOTE: need "externalConsole": true in launch.json otherwise Debug Console will crash.
-// It cannot handle the output.
-int number_of_searches = 0;
-double elapsed_time = 0.0;
+    // TEST: restart the search using goto.
+    // Ugly but works
+    // NOTE: need "externalConsole": true in launch.json otherwise Debug Console will crash.
+    // It cannot handle the output.
+    int number_of_searches = 0;
+    double elapsed_time = 0.0;
+    
 start:
     if (lseek(Handle, 0, SEEK_SET) == -1) {
         perror("lseek");
