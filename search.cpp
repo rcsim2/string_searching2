@@ -339,13 +339,13 @@ int main(int argc, char *argv[]) {
             
             // Robert Sedgewick's Algorithms in C
             // Boyer-Moore
-            //if ( bmsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            if ( bmsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
             
             // Bob Stout's Code Snippets
             // Pratt-Boyer-Moore
             //if ( strsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
             // Boyer-Moore-Horspool
-            if ( bmh_search((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            //if ( bmh_search((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
             
             // Thierry Lecroq's Exact String Matching Algorithms
             //if ( SearchBF((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )

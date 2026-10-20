@@ -37,6 +37,17 @@ int *bminit(char *string, size_t sz)
 	return skip;
 }
 
+// NOTE: This algo is flaky.
+// It cannot find [Frame 868] at the absolute end of the file.
+// Also:
+// Fails to find:
+// [Frame 868]
+// 0.000000
+// But does find:
+// [Frame 868]
+// 0.000000X
+// It needs the extra character after the 0.000000 to find it.
+// It is the working space it needs.
 int bmsearch(char *buffer, size_t M, char *sequence, size_t N)
 {
 	int i,j,t;
