@@ -98,14 +98,14 @@ static char *findme;
 
 void init_search(const char *string)
 {
-     size_t i;
+    size_t i;
 
-     len = strlen(string);
-     for (i = 0; i <= UCHAR_MAX; i++)                      /* rdg 10/93 */
-           table[i] = len;
-     for (i = 0; i < len; i++)
-           table[(unsigned char)string[i]] = len - i - 1;
-     findme = (char *)string;
+    len = strlen(string);
+    for (i = 0; i <= UCHAR_MAX; i++)                      /* rdg 10/93 */
+          table[i] = len;
+    for (i = 0; i < len; i++)
+          table[(unsigned char)string[i]] = len - i - 1;
+    findme = (char *)string;
 }
 
 /*
