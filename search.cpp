@@ -18,21 +18,21 @@
 
 //-----------------------------------------------------------------------------
 // Performance: (finding last frame in a 868 frame file)
-//
-// Michael Abrash's Blackbook                 2000 (P4)    2026 (M2)
-// SearchForString() using memchr()/memcmp(): 4.8 ms       0.07 ms
+//                                            2000 (P4)     2026 (M2)
+// Michael Abrash's Blackbook
+// SearchForString() using memchr()/memcmp(): 4.8 ms        0.03 ms
 //
 // Robert Sedgewick's Algorithms in C
-// bmsearch:		                          5.8 ms       0.25 ms
+// bmsearch:		                          5.8 ms        0.12 ms
 //
 // Bob Stout's Code Snippets
-// find_str_in_file() using strncmp():      103.4 ms
-// strsearch:		                          6.9 ms
-// bmh_search:		                            ? ms
+// find_str_in_file() using strncmp():      103.4 ms        2.83 ms
+// strsearch:		                          6.9 ms        0.05 ms
+// bmh_search:		                            ? ms        0.08 ms
 //
 // Thierry Lecroq's Exact String Matching Algorithms
-// SearchBF:	                             30.2 ms
-// SearchAUT:		                            ? ms       1.67 ms
+// SearchBF:	                             30.2 ms        0.51 ms
+// SearchAUT:		                            ? ms        0.81 ms
 // SearchBM:		                          6.5 ms
 // SearchTBM:		                          9.0 ms
 // SearchTUNEDBM:	                          5.5 ms
@@ -248,6 +248,7 @@ int main(int argc, char *argv[]) {
     // NEW: set file pointer to begin of file
     //fseek(fpFile, 0, SEEK_SET) ;
 
+    /////////////////////////////////////////////
     // We keep this to check if the result matches with the other search algos.
     // TEST: find_str_in_file()
     FILE *stream;
@@ -268,9 +269,9 @@ int main(int argc, char *argv[]) {
 		default:
 			printf("%s found at position %ld\n", argv[2], lStatusFlag );
             std::cout << "Elapsed time: " << p0.elapsed() * 1000.0 << " ms" << std::endl;
-
+            std::cout << std::endl;
 	}	
-    /////////////////////
+    /////////////////////////////////////////////
 
 
 // TEST: restart the search using goto.
@@ -467,8 +468,10 @@ start:
         elapsed_time += p1.elapsed() * 1000.0;
         printf("Number of searches: %d\n", number_of_searches);
         printf("Total elapsed time: %.2f ms\n\n", elapsed_time);
-        if (number_of_searches < 800'000)
+        if (number_of_searches < 100'000)
             goto start;
+        
+        printf("Average elapsed time: %.6f ms\n", elapsed_time / number_of_searches);
 
         return 0; // Exit code 0: Success
     } else {
