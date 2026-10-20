@@ -277,6 +277,8 @@ int main(int argc, char *argv[]) {
 // Ugly but works
 // NOTE: need "externalConsole": true in launch.json otherwise Debug Console will crash.
 // It cannot handle the output.
+int number_of_searches = 0;
+double elapsed_time = 0.0;
 start:
     if (lseek(Handle, 0, SEEK_SET) == -1) {
         perror("lseek");
@@ -459,8 +461,15 @@ start:
         printf("String found at position: %ld\n", (long)(result2 + result));
         //std::cout << "Elapsed time: " << p1.elapsed() << "s" << std::endl;
         std::cout << "Elapsed time: " << p1.elapsed() * 1000.0 << " ms" << std::endl;
+        
         // TEST:
-        goto start;
+        number_of_searches++;
+        elapsed_time += p1.elapsed() * 1000.0;
+        printf("Number of searches: %d\n", number_of_searches);
+        printf("Total elapsed time: %.2f ms\n\n", elapsed_time);
+        if (number_of_searches < 800'000)
+            goto start;
+
         return 0; // Exit code 0: Success
     } else {
         printf("String not found\n");
