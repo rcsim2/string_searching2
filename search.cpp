@@ -19,20 +19,20 @@
 //-----------------------------------------------------------------------------
 // Performance: (finding last frame in a 868 frame file)
 //
-// Michael Abrash's Blackbook                 2000 (P4)     2026 (M2)
-// SearchForString() using memchr()/memcmp(): 4.8 ms        0.07 ms
+// Michael Abrash's Blackbook                 2000 (P4)    2026 (M2)
+// SearchForString() using memchr()/memcmp(): 4.8 ms       0.07 ms
 //
 // Robert Sedgewick's Algorithms in C
-// bmsearch:		                          5.8 ms        0.25 ms
+// bmsearch:		                          5.8 ms       0.25 ms
 //
 // Bob Stout's Code Snippets
-// find_str_in_file() using strncmp():      103.4 ms              
+// find_str_in_file() using strncmp():      103.4 ms
 // strsearch:		                          6.9 ms
 // bmh_search:		                            ? ms
 //
 // Thierry Lecroq's Exact String Matching Algorithms
 // SearchBF:	                             30.2 ms
-// SearchAUT:		                            ? ms
+// SearchAUT:		                            ? ms       1.67 ms
 // SearchBM:		                          6.5 ms
 // SearchTBM:		                          9.0 ms
 // SearchTUNEDBM:	                          5.5 ms
