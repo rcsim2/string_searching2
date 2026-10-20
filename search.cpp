@@ -273,25 +273,29 @@ int main(int argc, char *argv[]) {
     /////////////////////
 
 
+// TEST: restart the search using goto.
+// Ugly but works
+// NOTE: need "externalConsole": true in launch.json otherwise Debug Console will crash.
+// It cannot handle the output.
+start:
+    if (lseek(Handle, 0, SEEK_SET) == -1) {
+        perror("lseek");
+        return 1;
+    }
 
-// start:
-//     if (lseek(Handle, 0, SEEK_SET) == -1) {
-//         perror("lseek");
-//         return 1;
-//     }
+    WorkingBlock = static_cast<unsigned char*>(malloc(BLOCK_SIZE));
+    if (WorkingBlock == nullptr) {
+        printf("Can't get enough memory\n");
+        return 1;
+    }
 
-//     WorkingBlock = static_cast<unsigned char*>(malloc(BLOCK_SIZE));
-//     if (WorkingBlock == nullptr) {
-//         printf("Can't get enough memory\n");
-//         return 1;
-//     }
+    NextLoadPtr = WorkingBlock;
+    NextLoadCount = BLOCK_SIZE;
+    Done = 0;
+    Found = 0;
+    result2 = 0;
+///////////////////
 
-//     NextLoadPtr = WorkingBlock;
-//     NextLoadCount = BLOCK_SIZE;
-//     Done = 0;
-//     Found = 0;
-//     result2 = 0;
-//     /////////////
 
     perf p1;
 
@@ -456,7 +460,7 @@ int main(int argc, char *argv[]) {
         //std::cout << "Elapsed time: " << p1.elapsed() << "s" << std::endl;
         std::cout << "Elapsed time: " << p1.elapsed() * 1000.0 << " ms" << std::endl;
         // TEST:
-        //goto start;
+        goto start;
         return 0; // Exit code 0: Success
     } else {
         printf("String not found\n");
