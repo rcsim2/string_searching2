@@ -259,7 +259,7 @@ int bmh_search(const char *string, const int stringlen,
 // Thierry Lecroq's Exact String Matching Algorithms //////////////////////////
 //#include "implementation.h"
 
-const int ASIZE = UCHAR_MAX + 1; // 256; // alphabet size (one byte: 2^8)
+//const int ASIZE = UCHAR_MAX + 1; // 256; // alphabet size (one byte: 2^8)
 const int XSIZE = 512; // maximum search pattern size
 
 #define EOS '\0'
@@ -283,40 +283,41 @@ int SearchBF(char *x, int m, char *y, int n) {
 
 
 // Deterministic Finite Automaton  (From: Thierry Lecroq) //////
-//void preAut(char *x, int m, Graph aut) {
-//   int i, state, target, oldTarget;
-// 
-//   for (state = getInitial(aut), i = 0; i < m; ++i) {
-//      oldTarget = getTarget(aut, state, x[i]);
-//      target = newVertex(aut);
-//      setTarget(aut, state, x[i], target);
-//      copyVertex(aut, target, oldTarget);
-//      state = target;
-//   }
-//   setTerminal(aut, state);
-//}
-// 
-// 
-//int SearchAUT(char *x, int m, char *y, int n) {
-//   int j, state;
-//   Graph aut;
-// 
-//   /* Preprocessing */
-//   aut = newAutomaton(m + 1, (m + 1)*ASIZE);
-//   preAut(x, m, aut);
-// 
-//   /* Searching */
-//   for (state = getInitial(aut), j = 0; j < n; ++j) {
-//      state = getTarget(aut, state, y[j]);
-//      if (isTerminal(aut, state)) {
-//         //OUTPUT(j);
-//		 // NEW: get position of search string in the buffer
-//		 result = j;
-//		 return 1; // match
-//	  }
-//   }
-//   return 0; // no match
-//}
+void preAut(char *x, int m, Graph aut) {
+    int i, state, target, oldTarget;
+
+    for (state = getInitial(aut), i = 0; i < m; ++i) {
+        oldTarget = getTarget(aut, state, x[i]);
+        target = newVertex(aut);
+        setTarget(aut, state, x[i], target);
+        copyVertex(aut, target, oldTarget);
+        state = target;
+    }
+    setTerminal(aut, state);
+}
+
+
+int SearchAUT(char *x, int m, char *y, int n) {
+    int j, state;
+    Graph aut;
+
+    /* Preprocessing */
+    aut = newAutomaton(m + 1, (m + 1)*ASIZE);
+    preAut(x, m, aut);
+
+    /* Searching */
+    for (state = getInitial(aut), j = 0; j < n; ++j) {
+        state = getTarget(aut, state, y[j]);
+        if (isTerminal(aut, state)) {
+            //OUTPUT(j);
+            // NEW: get position of search string in the buffer
+            // NOTE: Adjust j (end of match) back to the start of the match
+            result = j - m + 1;
+            return 1; // match
+        }
+    }
+    return 0; // no match
+}
 ////////////////////////////////////////////////////////////////
 
 

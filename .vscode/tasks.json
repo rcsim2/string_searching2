@@ -9,6 +9,7 @@
         "-std=c++17",
         "-g",
         "${workspaceFolder}/search.cpp",
+        "${workspaceFolder}/graph.cpp",
         "-o",
         "${workspaceFolder}/search"
       ],

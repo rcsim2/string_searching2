@@ -26,7 +26,7 @@
 // bmsearch:		                          5.8 ms        0.25 ms
 //
 // Bob Stout's Code Snippets
-// find_str_in_file() using strncmp():      103.4 ms
+// find_str_in_file() using strncmp():      103.4 ms              
 // strsearch:		                          6.9 ms
 // bmh_search:		                            ? ms
 //
@@ -104,7 +104,7 @@ unsigned char *pdest = NULL;
 long result = 0;
 
 
-
+#include "graph.h"
 #include "algorithm.h"
 
 
@@ -318,11 +318,11 @@ int main(int argc, char *argv[]) {
             // Pratt-Boyer-Moore
             //if ( strsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
             // Boyer-Moore-Horspool
-            if ( bmh_search((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            //if ( bmh_search((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
             
             // Thierry Lecroq's Exact String Matching Algorithms
             //if ( SearchBF((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
-            //if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
+            if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTUNEDBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
