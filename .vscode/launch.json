@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug search",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/search",
+            "args": [
+                "${workspaceFolder}/frames.txt",
+                "[Frame 1]"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "targetArchitecture": "arm64",
+            "preLaunchTask": "Build search"
+        }
+    ]
+}
