@@ -10,6 +10,7 @@
         "-g",
         "${workspaceFolder}/search.cpp",
         "${workspaceFolder}/graph.cpp",
+        "${workspaceFolder}/fsif.cpp",
         "-o",
         "${workspaceFolder}/search"
       ],

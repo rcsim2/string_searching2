@@ -103,7 +103,7 @@ struct perf {
 unsigned char *pdest = NULL;
 long result = 0;
 
-
+#include "fsif.h"
 #include "graph.h"
 #include "algorithm.h"
 
@@ -249,6 +249,33 @@ int main(int argc, char *argv[]) {
     //fseek(fpFile, 0, SEEK_SET) ;
 
 
+
+    // TEST: find_str_in_file()
+    FILE *stream;
+    if( (stream = fopen(argv[1], "rb")) == NULL ) {
+		printf("The file %s was not opened\n", argv[1]);
+        exit(1);
+    }
+    perf p0;
+    long lStatusFlag = find_str_in_file(stream, 0, argv[2]);
+
+    switch(lStatusFlag) {
+		case -1:        
+			printf("%s not found\n", argv[2] );
+			break;
+		case -2:
+			printf(	"Not enough memory to perform search\n"	);
+			break;
+		default:
+			printf("%s found at position %ld\n", argv[2], lStatusFlag );
+            std::cout << "Elapsed time: " << p0.elapsed() * 1000.0 << " ms" << std::endl;
+
+	}	
+    /////////////////////
+
+
+
+
     perf p1;
 
     /* Search the file in BLOCK_SIZE chunks */
@@ -318,11 +345,11 @@ int main(int argc, char *argv[]) {
             // Pratt-Boyer-Moore
             //if ( strsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
             // Boyer-Moore-Horspool
-            //if ( bmh_search((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
+            if ( bmh_search((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
             
             // Thierry Lecroq's Exact String Matching Algorithms
             //if ( SearchBF((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
-            if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
+            //if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTUNEDBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
