@@ -28,7 +28,7 @@ the string is not found, it prints `String not found` and exits with status 1.
 
 ## Implementation
 
-The file is read in 16 KiB blocks. Uses Abrash's brute force memchr()/memcmp()by default. `algorithm.h` contains other string-search algorithms for comparison.
+The file is read in 16 KiB blocks. Uses Abrash's brute force memchr()/memcmp() by default. `algorithm.h` contains other string-search algorithms for comparison.
 
 ## Names
 
