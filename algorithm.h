@@ -69,6 +69,7 @@ int bmsearch(char *buffer, size_t M, char *sequence, size_t N)
 // be called early because it sets the length of the search
 // string (len). The search function uses len to determine how many characters
 // to compare. If len is not set correctly, the search will not work properly.
+// NOTE: Pratt is a misnomer.
 ///* +++Date last modified: 05-Jul-1997 */
 //
 ///*
