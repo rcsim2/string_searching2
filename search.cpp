@@ -522,6 +522,7 @@ start:
         default:
             break;
         }
+        printf("String found at position: %ld\n", (long)(result2 + result));
         printf("Number of searches: %d\n", number_of_searches);
         printf("Average elapsed time: %.6f ms\n\n", elapsed_time / number_of_searches);
         number_of_searches = 0;
