@@ -85,6 +85,10 @@ int bmsearch(char *buffer, size_t M, char *sequence, size_t N)
 // string (len). The search function uses len to determine how many characters
 // to compare. If len is not set correctly, the search will not work properly.
 // NOTE: Pratt is a misnomer.
+// NOTE: Original snippet: 
+// https://github.com/jscottb/c_snippets/blob/master/pbmsrch.c
+// https://www.stjarnhimlen.se/snippets/pbmsrch.c
+//
 ///* +++Date last modified: 05-Jul-1997 */
 //
 ///*
