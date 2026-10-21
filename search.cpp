@@ -358,6 +358,30 @@ start:
         } else {
             /* Search this block */
 
+            int search_result = 0;
+            int search_algo = 1; 
+
+            switch (search_algo) {
+                case 1:
+                    search_result = SearchForString(WorkingBlock, BlockSearchLength, SearchString, SearchStringLength);
+                    break;
+                case 2:
+                    search_result = bmsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength);
+                    break;
+                case 3:
+                    search_result = strsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength);
+                    break;
+                case 4:
+                    search_result = bmh_search((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength);
+                    break;
+                case 5:
+                    search_result = SearchBF((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
+                    break;
+                case 6:
+                    search_result = SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
+                    break;
+            }
+
             // Michael Abrash's Blackbook
             // Optimized brute-force
             //
@@ -373,7 +397,7 @@ start:
             // That’s why SearchForString should receive BlockSearchLength, while algorithms
             // that expect the total text-buffer length should receive WorkingLength.
             //
-            if ( SearchForString(WorkingBlock, BlockSearchLength, SearchString, SearchStringLength) )
+            //if ( SearchForString(WorkingBlock, BlockSearchLength, SearchString, SearchStringLength) )
             
 
             // Robert Sedgewick's Algorithms in C
@@ -420,6 +444,8 @@ start:
             //if ( SearchSMITH((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( Algorithm::SearchGS((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchRAITA((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
+            
+            if ( search_result == 1 )
             {
                 Found = 1;     /* we've found a match */
                 Done = 1;
