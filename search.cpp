@@ -356,6 +356,14 @@ start:
             entirely in this block (sequences that run off the end of the
             block will be transferred to the next block and found when
             that block is searched) */
+        // NOTE: The +1 counts the starting position where the search string
+        // exactly reaches the end of the block.
+        // For a block of length 5 and a search string of length 3, the
+        // valid start positions are 0, 1, and 2 — three positions total:
+        // 5 - 3 + 1 = 3 
+        // NOTE: - and + have same precedence, so they are evaluated left to right.
+        // Without the +1, the final valid position would be skipped.
+        // BlockSearchLength is the number of possible starting positions.
         if ( (BlockSearchLength =
                WorkingLength - SearchStringLength + 1) <= 0 ) {
             Done = 1;   /* too few characters in this block for there
@@ -414,8 +422,9 @@ start:
             // Otherwise we fail to find the search string when it is at the very end
             // of the file.
             // See comment in algorithm.h
-            // WorkingLength is the number of valid bytes currently in the buffer. It includes any bytes carried over from the previous block.
-            // BlockSearchLength is the number of valid starting positions where the entire search string could fit in those bytes:
+            // WorkingLength vs BlockSearchLength:
+            // * WorkingLength is the number of valid bytes currently in the buffer. It includes any bytes carried over from the previous block.
+            // * BlockSearchLength is the number of valid starting positions where the entire search string could fit in those bytes.
             // So: BlockSearchLength = WorkingLength - SearchStringLength + 1;
             //
             // ERROR: if ( bmsearch((char*)WorkingBlock, BlockSearchLength, (char*)SearchString, SearchStringLength) )
@@ -438,6 +447,7 @@ start:
             // We need WorkingLength not BlockSearchLength. Otherwise we fail to find
             // the search string when it is at the very end of the file.
             //if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength) )
+
             //if ( SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTUNEDBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
