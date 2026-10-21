@@ -280,6 +280,7 @@ int main(int argc, char *argv[]) {
     // It cannot handle the output.
     int number_of_searches = 0;
     double elapsed_time = 0.0;
+    int search_algo = 1; 
     
 start:
     if (lseek(Handle, 0, SEEK_SET) == -1) {
@@ -298,7 +299,7 @@ start:
     Done = 0;
     Found = 0;
     result2 = 0;
-///////////////////
+    ///////////////////
 
 
     perf p1;
@@ -359,7 +360,7 @@ start:
             /* Search this block */
 
             int search_result = 0;
-            int search_algo = 1; 
+            //int search_algo = 1; 
 
             switch (search_algo) {
                 case 1:
@@ -486,19 +487,50 @@ start:
         //printf("String found\n");
         // return position of search string in the file
         //return result2 + result;
-        printf("String found at position: %ld\n", (long)(result2 + result));
+    //    printf("String found at position: %ld\n", (long)(result2 + result));
         //std::cout << "Elapsed time: " << p1.elapsed() << "s" << std::endl;
-        std::cout << "Elapsed time: " << p1.elapsed() * 1000.0 << " ms" << std::endl;
+    //    std::cout << "Elapsed time: " << p1.elapsed() * 1000.0 << " ms" << std::endl;
         
         // TEST:
         number_of_searches++;
         elapsed_time += p1.elapsed() * 1000.0;
-        printf("Number of searches: %d\n", number_of_searches);
-        printf("Total elapsed time: %.2f ms\n\n", elapsed_time);
+    //    printf("Number of searches: %d\n", number_of_searches);
+    //    printf("Total elapsed time: %.2f ms\n\n", elapsed_time);
         if (number_of_searches < 100'000)
             goto start;
+
+        switch (search_algo)
+        {
+        case 1:
+            printf("1. SearchString\n");
+            break;
+        case 2:
+            printf("2. bmsearch\n");
+            break;
+        case 3:
+            printf("3. strsearch\n");
+            break;
+        case 4:
+            printf("4. bmh_search\n");
+            break;
+        case 5:
+            printf("5. SearchBF\n");
+            break;
+        case 6:
+            printf("6. SearchAUT\n");
+            break;        
+        default:
+            break;
+        }
+        printf("Number of searches: %d\n", number_of_searches);
+        printf("Average elapsed time: %.6f ms\n\n", elapsed_time / number_of_searches);
+        number_of_searches = 0;
+        elapsed_time = 0.0;
+        search_algo++;
+        if (search_algo <= 6)
+            goto start;
         
-        printf("Average elapsed time: %.6f ms\n", elapsed_time / number_of_searches);
+        
 
         return 0; // Exit code 0: Success
     } else {
