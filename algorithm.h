@@ -141,8 +141,9 @@ int strsearch(const char *string, const int stringlen,
     /* register */ size_t pos = len - 1;
     char *here;
     // ERROR: need correct limit for search string length
-    //size_t limit=strlen(string);
-    size_t limit=stringlen;
+    // NONO: this was not the error. It was calling init_search() too late.
+    size_t limit=strlen(string);
+    //size_t limit=stringlen;
 
 	// NEW: save initial Buffer begin
 	pdest = (unsigned char*)string;	
