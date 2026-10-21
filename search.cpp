@@ -14,6 +14,11 @@
 // 2026-10-19:
 // RG: Some small changes to make it run on macOS. The original code was
 // written for DOS/Windows.
+//
+// NOTE: Taken from R/C Sim Sikorsky. SearchStringInFile() was called from the
+// gameloop by ResetFilePointer() which set the file pointer to 
+// [Frame g_iFrameCount]. There the m_matFileObjectMatrix was read.
+// It was used for playing back recorded flights. 
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
@@ -276,8 +281,9 @@ int main(int argc, char *argv[]) {
 
     // TEST: restart the search using goto.
     // Ugly but works
-    // NOTE: need "externalConsole": true in launch.json otherwise Debug Console will crash.
-    // It cannot handle the output.
+    // NOTE: need "externalConsole": true in launch.json otherwise Debug Console
+    // will crash. It cannot handle all the output from the loop. It will crash
+    // after a few iterations. The external console can handle it.
     int number_of_searches = 0;
     double elapsed_time = 0.0;
     int search_algo = 1; 
