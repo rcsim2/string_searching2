@@ -15,7 +15,7 @@
 // RG: Some small changes to make it run on macOS. The original code was
 // written for DOS/Windows.
 //
-// NOTE: Taken from R/C Sim Sikorsky. SearchStringInFile() was called from the
+// Taken from R/C Sim Sikorsky. SearchStringInFile() was called from the
 // gameloop by ResetFilePointer() which set the file pointer to 
 // [Frame g_iFrameCount]. There the m_matFileObjectMatrix was read.
 // It was used for playing back recorded flights. 
