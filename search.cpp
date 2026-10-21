@@ -97,7 +97,7 @@ struct perf {
 //#include <io.h>
 
 
-#define BLOCK_SIZE  0x4000   /* we'll process the file in 16Kb
+#define BLOCK_SIZE  0x4000   /* we'll process the file in 16KB
                                  blocks */
 
 
