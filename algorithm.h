@@ -388,7 +388,7 @@ void preBmGs(char *x, int m, int bmGs[]) {
         if (i == -1 || suff[i] == i + 1)
             for (; j < m - 1 - i; ++j)
                 if (bmGs[j] == m)
-                bmGs[j] = m - 1 - i;
+                    bmGs[j] = m - 1 - i;
     for (i = 0; i <= m - 2; ++i)
         bmGs[m - 1 - suff[i]] = m - 1 - i;
 }
@@ -400,7 +400,19 @@ int SearchBM(char *x, int m, char *y, int n) {
     /* Preprocessing */
     preBmGs(x, m, bmGs);
     preBmBc(x, m, bmBc);
-    
+
+    // TEST: print bmGs table
+    static bool once = true;
+    if (once) {
+        once = false;
+        printf("bmGs: ");
+        for (int k = 0; k < m; k++) {
+            printf("%d ", bmGs[k]);
+        }
+        printf("\n\n");
+    }
+    /////////////////////
+
     /* Searching */
     j = 0;
     while (j <= n - m) {

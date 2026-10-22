@@ -267,7 +267,7 @@ int main(int argc, char *argv[]) {
 
     switch(lStatusFlag) {
 		case -1:        
-			printf("%s not found\n", argv[2] );
+			printf("%s not found\n\n", argv[2] );
 			break;
 		case -2:
 			printf(	"Not enough memory to perform search\n"	);
@@ -551,13 +551,42 @@ start:
         elapsed_time = 0.0;
         search_algo++;
         if (search_algo <= 7)
-            goto start;
-        
-        
+            goto start;    
 
         return 0; // Exit code 0: Success
     } else {
-        printf("String not found\n");
+        // String not found. All algos should give the same result.
+        switch (search_algo)
+        {
+        case 1:
+            printf("1. SearchString\n");
+            break;
+        case 2:
+            printf("2. bmsearch\n");
+            break;
+        case 3:
+            printf("3. strsearch\n");
+            break;
+        case 4:
+            printf("4. bmh_search\n");
+            break;
+        case 5:
+            printf("5. SearchBF\n");
+            break;
+        case 6:
+            printf("6. SearchAUT\n");
+            break;
+        case 7:
+            printf("7. SearchBM\n");
+            break;
+        }
+        printf("String not found\n\n");
+        number_of_searches = 0;
+        elapsed_time = 0.0;
+        search_algo++;
+        if (search_algo <= 7)
+            goto start;
+
         //MessageBox(NULL,"String not found","QQQ!",MB_OK);
         //return -1;
         return 1; // Exit code 1: Not found / logical failure
