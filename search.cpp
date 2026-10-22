@@ -451,8 +451,8 @@ start:
             // We need WorkingLength not BlockSearchLength. Otherwise we fail to find
             // the search string when it is at the very end of the file.
             //if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength) )
+            //if ( SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength) )
 
-            //if ( SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTUNEDBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchKMP((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
