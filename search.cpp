@@ -37,8 +37,8 @@
 //
 // Thierry Lecroq's Exact String Matching Algorithms
 // SearchBF:	                             30.2 ms        0.503 ms
-// SearchAUT:		                            ? ms        0.799 ms
-// SearchBM:		                          6.5 ms
+// SearchAUT:		                            ? ms        0.806 ms
+// SearchBM:		                          6.5 ms.       0.106 ms
 // SearchTBM:		                          9.0 ms
 // SearchTUNEDBM:	                          5.5 ms
 // SearchKMP:	                             17.2 ms
@@ -396,6 +396,9 @@ start:
                 case 6:
                     search_result = SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
                     break;
+                case 7:
+                    search_result = SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
+                    break;
             }
 
             // Michael Abrash's Blackbook
@@ -513,7 +516,7 @@ start:
         elapsed_time += p1.elapsed() * 1000.0;
     //    printf("Number of searches: %d\n", number_of_searches);
     //    printf("Total elapsed time: %.2f ms\n\n", elapsed_time);
-        if (number_of_searches < 100'000)
+        if (number_of_searches < 10'000)
             goto start;
 
         switch (search_algo)
@@ -535,8 +538,9 @@ start:
             break;
         case 6:
             printf("6. SearchAUT\n");
-            break;        
-        default:
+            break;
+        case 7:
+            printf("7. SearchBM\n");
             break;
         }
         printf("String found at position: %ld\n", (long)(result2 + result));
@@ -546,7 +550,7 @@ start:
         number_of_searches = 0;
         elapsed_time = 0.0;
         search_algo++;
-        if (search_algo <= 6)
+        if (search_algo <= 7)
             goto start;
         
         
