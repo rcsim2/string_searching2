@@ -255,6 +255,7 @@ int main(int argc, char *argv[]) {
 
     /////////////////////////////////////////////
     // We keep this to check if the result matches with the other search algos.
+    // NOTE: needs fsif.h and fsif.cpp
     // TEST: find_str_in_file()
     FILE *stream;
     if( (stream = fopen(argv[1], "rb")) == NULL ) {
