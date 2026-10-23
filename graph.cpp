@@ -15,6 +15,7 @@ static int error(const char *where)
     std::exit(EXIT_FAILURE);
 }
 
+
 struct _graph
 {
     int vertexNumber,
