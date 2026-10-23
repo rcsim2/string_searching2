@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>String Search Mechanics</title>
+<style>
+  body { font-family: monospace; background: #111; color: #0f0; padding: 20px; }
+  .box { border: 1px solid #333; padding: 15px; margin-bottom: 15px; background: #181818; }
+  .tape { display: flex; font-size: 18px; margin: 10px 0; overflow-x: auto; }
+  .cell { width: 30px; height: 35px; border: 1px solid #444; display: flex; 
+          align-items: center; justify-content: center; background: #222; }
+  .cell.match { background: #008800; color: #fff; font-weight: bold; }
+  .cell.mismatch { background: #880000; color: #fff; }
+  .cell.anchor { background: #888800; color: #000; font-weight: bold; }
+  button { background: #0f0; color: #000; border: none; padding: 8px 12px; font-weight: bold; cursor: pointer; margin-right: 5px; }
+  button:hover { background: #0c0; }
+  input { background: #222; border: 1px solid #555; color: #0f0; padding: 6px; font-family: monospace; }
+  select { background: #222; color: #0f0; border: 1px solid #555; padding: 6px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<h1>String Search Visualizer</h1>
+
+<div class="box">
+  <label>Text: </label>
+  <input type="text" id="textInput" value="HERE IS A SIMPLE EXAMPLE" size="40">
+  <br><br>
+  <label>Pattern: </label>
+  <input type="text" id="patInput" value="EXAMPLE" size="20">
+  <br><br>
+  <label>Algorithm: </label>
+  <select id="algoSelect">
+    <option value="naive">1. Naïve (Sequential check, step i+1)</option>
+    <option value="abrash">2. Abrash Hardware (Sequential scan for pat[0] -> inline memcmp)</option>
+    <option value="horspool">3. Horspool (Bad-Character Skip Table)</option>
+    <option value="boyermoore">4. Boyer-Moore (Bad-Character Rule, Right-to-Left)</option>
+  </select>
+  <br><br>
+  <button onclick="startSearch()">Run Search</button>
+  <button onclick="stepSearch()">Step</button>
+  <button onclick="resetVisualizer()">Reset</button>
+</div>
+
+<div class="box">
+  <div id="status">Gereed op index 0</div>
+  <h3>Text Buffer</h3>
+  <div id="textTape" class="tape"></div>
+  <h3>Pattern Alignment</h3>
+  <div id="patTape" class="tape"></div>
+</div>
+
+<script>
+let state = null;
+let runInterval = null;
+
+function resetVisualizer() {
+  if (runInterval) clearInterval(runInterval);
+
+  const text = document.getElementById('textInput').value;
+  const pat = document.getElementById('patInput').value;
+  const algo = document.getElementById('algoSelect').value;
+
+  state = {
+    text, pat, algo,
+    textIdx: 0,         
+    patIdx: 0,          
+    bmShift: 0,         
+    bmJ: pat.length - 1,
+    done: false,
+    matched: false
+  };
+
+  renderTape();
+  document.getElementById('status সন্ত্রাসী' in window ? '' : 'status').innerText = "Gereed op index 0. Klik op Step of Run.";
+}
+
+function stepSearch() {
+  if (!state || state.done) resetVisualizer();
+  if (state.done) return;
+
+  const { text, pat, algo } = state;
+
+  if (algo === 'naive') {
+    if (text[state.textIdx + state.patIdx] === pat[state.patIdx]) {
+      state.patIdx++;
+      if (state.patIdx === pat.length) {
+        state.done = true;
+        state.matched = true;
+        document.getElementById('status').innerText = `MATCH GEVONDEN op index ${state.textIdx}!`;
+      }
+    } else {
+      state.textIdx++;
+      state.patIdx = 0;
+      if (state.textIdx > text.length - pat.length) {
+        state.done = true;
+        document.getElementById('status').innerText = "GEEN MATCH GEVONDEN";
+      }
+    }
+  } 
+  else if (algo === 'abrash') {
+    if (state.patIdx === 0) {
+      if (text[state.textIdx] !== pat[0]) {
+        state.textIdx++;
+        if (state.textIdx > text.length - pat.length) {
+          state.done = true;
+          document.getElementById('status').innerText = "GEEN MATCH GEVONDEN";
+        }
+        renderTape();
+        return;
+      }
+    }
+
+    if (text[state.textIdx + state.patIdx] === pat[state.patIdx]) {
+      state.patIdx++;
+      if (state.patIdx === pat.length) {
+        state.done = true;
+        state.matched = true;
+        document.getElementById('status').innerText = `MATCH GEVONDEN via Abrash Scan op index ${state.textIdx}!`;
+      }
+    } else {
+      state.textIdx++;
+      state.patIdx = 0;
+      if (state.textIdx > text.length - pat.length) {
+        state.done = true;
+        document.getElementById('status').innerText = "GEEN MATCH GEVONDEN";
+      }
+    }
+  } 
+  else if (algo === 'horspool') {
+    let bc = {};
+    for (let i = 0; i < 256; i++) bc[String.fromCharCode(i)] = pat.length;
+    for (let i = 0; i < pat.length - 1; i++) bc[pat[i]] = pat.length - 1 - i;
+
+    let lastChar = text[state.textIdx + pat.length - 1];
+    let matchedLen = 0;
+    for (let j = pat.length - 1; j >= 0; j--) {
+      if (text[state.textIdx + j] === pat[j]) {
+        matchedLen++;
+      } else {
+        break;
+      }
+    }
+
+    if (matchedLen === pat.length) {
+      state.done = true;
+      state.matched = true;
+      document.getElementById('status').innerText = `MATCH GEVONDEN via Horspool op index ${state.textIdx}!`;
+    } else {
+      let shift = bc[lastChar] || pat.length;
+      state.textIdx += shift;
+      if (state.textIdx > text.length - pat.length) {
+        state.done = true;
+        document.getElementById('status').innerText = "GEEN MATCH GEVONDEN";
+      }
+    }
+  }
+  else if (algo === 'boyermoore') {
+    if (state.bmShift > text.length - pat.length) {
+      state.done = true;
+      document.getElementById('status').innerText = "GEEN MATCH GEVONDEN";
+      renderTape();
+      return;
+    }
+
+    let textChar = text[state.bmShift + state.bmJ];
+    let patChar = pat[state.bmJ];
+
+    if (textChar === patChar) {
+      state.bmJ--;
+      if (state.bmJ < 0) {
+        state.done = true;
+        state.matched = true;
+        document.getElementById('status').innerText = `MATCH GEVONDEN via Boyer-Moore op index ${state.bmShift}!`;
+      }
+    } else {
+      let lastOccur = -1;
+      for (let k = 0; k < state.bmJ; k++) {
+        if (pat[k] === textChar) {
+          lastOccur = k;
+        }
+      }
+      let shift = state.bmJ - lastOccur;
+      if (shift < 1) shift = 1;
+
+      state.bmShift += shift;
+      state.bmJ = pat.length - 1;
+
+      if (state.bmShift > text.length - pat.length) {
+        state.done = true;
+        document.getElementById('status').innerText = "GEEN MATCH GEVONDEN";
+      }
+    }
+  }
+
+  renderTape();
+}
+
+function renderTape() {
+  if (!state) return;
+  const tTape = document.getElementById('textTape');
+  const pTape = document.getElementById('patTape');
+  tTape.innerHTML = '';
+  pTape.innerHTML = '';
+
+  let activeIdx = (state.algo === 'boyermoore') ? state.bmShift : state.textIdx;
+
+  // 1. Text Buffer
+  for (let i = 0; i < state.text.length; i++) {
+    const c = document.createElement('div');
+    c.className = 'cell';
+    c.innerText = state.text[i];
+
+    if (i >= activeIdx && i < activeIdx + state.pat.length) {
+      let pOffset = i - activeIdx;
+      if (state.algo === 'boyermoore') {
+        if (pOffset === state.bmJ) {
+          c.classList.add('mismatch');
+        } else if (pOffset > state.bmJ) {
+          c.classList.add('match');
+        }
+      } else {
+        if (pOffset < state.patIdx) {
+          c.classList.add('match');
+        } else if (pOffset === state.patIdx && !state.done) {
+          c.classList.add('mismatch');
+        }
+      }
+    }
+
+    if (state.algo === 'abrash' && i === state.textIdx && state.patIdx === 0) {
+      c.classList.add('anchor');
+    }
+
+    tTape.appendChild(c);
+  }
+
+  // 2. Pattern Tape
+  for (let i = 0; i < state.text.length; i++) {
+    const c = document.createElement('div');
+    c.className = 'cell';
+    if (i >= activeIdx && i < activeIdx + state.pat.length) {
+      c.innerText = state.pat[i - activeIdx];
+      c.style.background = '#333';
+    } else {
+      c.style.visibility = 'hidden';
+    }
+    pTape.appendChild(c);
+  }
+}
+
+function startSearch() {
+  resetVisualizer();
+  runInterval = setInterval(() => {
+    if (state.done) {
+      clearInterval(runInterval);
+    } else {
+      stepSearch();
+    }
+  }, 200);
+}
+
+window.onload = resetVisualizer;
+</script>
+</body>
+</html>
