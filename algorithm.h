@@ -409,7 +409,7 @@ int SearchBM(char *x, int m, char *y, int n) {
     preBmGs(x, m, bmGs);
     preBmBc(x, m, bmBc);
 
-    // TEST: print bmGs table
+    // TEST: print bmBc and bmGs table
     // static bool once = true;
     // if (once) {
     //     once = false;
@@ -829,7 +829,7 @@ int SearchBR(char *x, int m, char *y, int n) {
 ////////////////////////////////////////////////////////////////
 
 
-// Quick Search  (From: Thierry Lecroq) ////////////////////////
+// Quick Search (From: Thierry Lecroq) ////////////////////////
 void preQsBc(char *x, int m, int qsBc[]) {
     int i;
 
