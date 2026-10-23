@@ -3,6 +3,22 @@
 #include <string.h>
 #include "graph.h"
 
+/////////////////////////////////////////////////////////////////////
+// NOTE: There was a bug in the original code which allowed XFrame 1]
+// to be found in the text even though it was not present.
+//
+// State 0 is the automaton’s initial state, but newAutomaton also 
+// initializes vertexNum to 0. So the first call to newVertex returns 0.
+// In preAut, that makes the transition for the pattern’s first character
+// point back to the initial state, instead of advancing to a new state.
+// That lets the automaton match the rest of the pattern without requiring
+// its first character.
+
+// The fix is to reserve state 0 for the initial state by starting vertexNum
+// at 1. Then the first new state is 1, and the existing m + 1 allocation
+// has room for the initial state plus all m pattern states.
+/////////////////////////////////////////////////////////////////////
+
 struct _graph {
     int vertexNum;
     int edgeNum;
@@ -13,7 +29,7 @@ struct _graph {
 
 Graph newAutomaton(int v, int e) {
     Graph g = (Graph)malloc(sizeof(struct _graph));
-    g->vertexNum = 0;
+    g->vertexNum = 1; //0; // Reserve state 0 for the initial state
     g->edgeNum = 0;
     g->initial = 0;
     g->terminal = (int *)calloc(v, sizeof(int));

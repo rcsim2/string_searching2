@@ -57,7 +57,15 @@ int bmsearch(char *buffer, size_t M, char *sequence, size_t N)
 	int i,j,t;
 	int *skip;
 	skip=bminit(sequence,N);
-	for (i=N-1,j=N-1;j>0;i--,j--)
+    // NOTE: Abrash in Ch.14 reports a problem here: j>0 should be j>=0. 
+    // En dat klopt: bmsearch never compares sequence[0] because its loop 
+    // stops at j > 0
+    // Daarom krijgen we een hit voor "XFrame 1]" terwijl die string niet
+    // in de text voorkomt. De eerste letter "X" wordt niet vergeleken.
+    // Maar let op: met j>= zal de loop nog een keer loopen en wordt i
+    // met 1 verlaagd. result zal dan 1 te laag zijn. We moeten dan dus het 
+    // result met 1 verhogen.
+	for (i=N-1,j=N-1;j>=0;i--,j--)
 		while(sequence[j]!=buffer[i])
 		{
 			t=skip[buffer[i]];
@@ -68,7 +76,7 @@ int bmsearch(char *buffer, size_t M, char *sequence, size_t N)
 			j=N-1;
 		} //return i; 
 		// NEW: get position of search string in the buffer
-		result = i;
+		result = i + 1; // NOTE: i is 1 too low because the loop decremented it one more time after the match
 		return 1; // match		
 }
 
@@ -402,21 +410,21 @@ int SearchBM(char *x, int m, char *y, int n) {
     preBmBc(x, m, bmBc);
 
     // TEST: print bmGs table
-    static bool once = true;
-    if (once) {
-        once = false;
-        printf("bmBc:\n");
-        for (int k = 0; k < ASIZE; k++) {
-            printf("%03d '%c': %d\n", k, (k >= 32 && k <= 126) ? k : '.', bmBc[k]);
-        }
-        printf("\n\n");
-        printf("bmGs:\n");
-        for (int k = 0; k < m; k++) {
-            printf("%03d '%c': %d\n", k, y[k], bmGs[k]);
-        }
-        printf("\n\n");
-    }
-    /////////////////////
+    // static bool once = true;
+    // if (once) {
+    //     once = false;
+    //     printf("bmBc:\n");
+    //     for (int k = 0; k < ASIZE; k++) {
+    //         printf("%03d '%c': %d\n", k, (k >= 32 && k <= 126) ? k : '.', bmBc[k]);
+    //     }
+    //     printf("\n");
+    //     printf("bmGs:\n");
+    //     for (int k = 0; k < m; k++) {
+    //         printf("%03d '%c': %d\n", k, x[k], bmGs[k]);
+    //     }
+    //     printf("\n");
+    // }
+    /////////////////////////
 
     /* Searching */
     j = 0;
