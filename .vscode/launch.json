@@ -8,7 +8,7 @@
             "program": "${workspaceFolder}/search",
             "args": [
                 "${workspaceFolder}/frames.txt",
-                "bbbaaa"
+                "[Frame 1]"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
