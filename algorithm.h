@@ -289,7 +289,7 @@ int bmh_search(const char *string, const int stringlen,
 // Thierry Lecroq's Exact String Matching Algorithms //////////////////////////
 //#include "implementation.h"
 
-//const int ASIZE = UCHAR_MAX + 1; // 256; // alphabet size (one byte: 2^8)
+const int ASIZE = UCHAR_MAX + 1; // 256; // alphabet size (one byte: 2^8)
 const int XSIZE = 512; // maximum search pattern size
 
 #define EOS '\0'

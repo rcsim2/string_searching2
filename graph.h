@@ -1,7 +1,7 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#define ASIZE 256
+//#define ASIZE 256
 
 
 struct _graph; 
