@@ -13,7 +13,7 @@
 // point back to the initial state, instead of advancing to a new state.
 // That lets the automaton match the rest of the pattern without requiring
 // its first character.
-
+//
 // The fix is to reserve state 0 for the initial state by starting vertexNum
 // at 1. Then the first new state is 1, and the existing m + 1 allocation
 // has room for the initial state plus all m pattern states.
