@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive String Search & Wasm Visualizer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        retroGreen: '#00ff66',
+                        retroDark: '#0a0d0e',
+                        retroPanel: '#12181a',
+                        retroAccent: '#00cc55',
+                        retroAmber: '#ffaa00',
+                        retroRed: '#ff3366'
+                    },
+                    fontFamily: {
+                        mono: ['Fira Code', 'Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Blinking text effect animation */
+        @keyframes blink-animation {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0.15; }
+        }
+        .blink-text {
+            animation: blink-animation 0.8s infinite;
+        }
+
+        /* Custom glow effects */
+        .glow-green {
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+        }
+        .glow-amber {
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+        }
+
+        /* Custom Scrollbar for matrix views */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0d0e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00cc55;
+        }
+    </style>
+</head>
+<body class="bg-retroDark text-slate-200 font-mono min-h-screen flex flex-col">
+
+    <!-- Header Section -->
+    <header class="border-b border-slate-800 bg-retroPanel p-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-3 h-3 rounded-full bg-retroGreen blink-text"></div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                    <span class="text-retroGreen">&gt;_</span> STRING_SEARCH_LAB
+                    <span class="text-xs text-slate-500 font-normal px-2 py-0.5 border border-slate-800 rounded bg-slate-900">Wasm & JS Hybrid</span>
+                </h1>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button id="toggleEngineBtn" onclick="toggleEngineMode()" class="text-xs px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center gap-2">
+                    <span>Engine:</span>
+                    <span id="engineModeBadge" class="font-bold text-retroGreen">Wasm (WebAssembly)</span>
+                </button>
+                <button id="retroThemeBtn" onclick="toggleRetroGlow()" class="text-xs px-3 py-1.5 rounded border border-retroGreen/30 bg-retroGreen/10 hover:bg-retroGreen/20 text-retroGreen transition">
+                    Retro CRT Glow: ON
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Controls & Configuration Panel (4 cols) -->
+        <section class="lg:col-span-4 space-y-6">
+            
+            <!-- Inputs Panel -->
+            <div class="bg-retroPanel border border-slate-800 rounded-lg p-5 space-y-4 shadow-md">
+                <h2 class="text-sm font-semibold text-retroGreen tracking-wider uppercase flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    Input Strings
+                </h2>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Target Text</label>
+                    <textarea id="inputText" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-xs text-retroGreen focus:outline-none focus:border-retroGreen font-mono resize-y" placeholder="Enter text to search in...">here is a simple example for boyer moore and horspool string searching with memchr features</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Search Pattern</label>
+                    <input id="inputPattern" type="text" value="example" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-xs text-retroGreen focus:outline-none focus:border-retroGreen font-mono" placeholder="Pattern...">
+                </div>
+
+                <!-- Preset Options -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Presets / Case Studies</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <button onclick="loadPreset('bbbaaa')" class="p-2 border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-300 rounded text-left transition">
+                            <div class="font-bold text-retroAmber">"bbbaaa"</div>
+                            <div class="text-[10px] text-slate-500">BM Boundary Case</div>
+                        </button>
+                        <button onclick="loadPreset('dna')" class="p-2 border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-300 rounded text-left transition">
+                            <div class="font-bold text-sky-400">DNA Sequence</div>
+                            <div class="text-[10px] text-slate-500">Repeated Alphabet</div>
+                        </button>
+                        <button onclick="loadPreset('abrash')" class="p-2 border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-300 rounded text-left transition">
+                            <div class="font-bold text-emerald-400">Abrash Scan</div>
+                            <div class="text-[10px] text-slate-500">Memchr Advantage</div>
+                        </button>
+                        <button onclick="loadPreset('worst')" class="p-2 border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-300 rounded text-left transition">
+                            <div class="font-bold text-rose-400">Worst Case</div>
+                            <div class="text-[10px] text-slate-500">High Mismatch</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Algorithm Selection -->
+            <div class="bg-retroPanel border border-slate-800 rounded-lg p-5 space-y-4 shadow-md">
+                <h2 class="text-sm font-semibold text-retroGreen tracking-wider uppercase flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Select Algorithm
+                </h2>
+
+                <div class="space-y-2" id="algoSelectorGroup">
+                    <label class="flex items-center justify-between p-2.5 rounded bg-slate-900/80 border border-slate-700/60 hover:border-retroGreen/50 cursor-pointer transition">
+                        <div class="flex items-center gap-2">
+                            <input type="radio" name="algorithm" value="bm" checked class="accent-retroGreen">
+                            <span class="text-xs font-bold text-white">Boyer-Moore</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">bmBc + bmGs</span>
+                    </label>
+
+                    <label class="flex items-center justify-between p-2.5 rounded bg-slate-900/80 border border-slate-700/60 hover:border-retroGreen/50 cursor-pointer transition">
+                        <div class="flex items-center gap-2">
+                            <input type="radio" name="algorithm" value="horspool" class="accent-retroGreen">
+                            <span class="text-xs font-bold text-white">Boyer-Moore-Horspool</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">Bad-Char Only</span>
+                    </label>
+
+                    <label class="flex items-center justify-between p-2.5 rounded bg-slate-900/80 border border-slate-700/60 hover:border-retroGreen/50 cursor-pointer transition">
+                        <div class="flex items-center gap-2">
+                            <input type="radio" name="algorithm" value="abrash" class="accent-retroGreen">
+                            <span class="text-xs font-bold text-white">Abrash Hardware Scan</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">memchr() + memcmp()</span>
+                    </label>
+
+                    <label class="flex items-center justify-between p-2.5 rounded bg-slate-900/80 border border-slate-700/60 hover:border-retroGreen/50 cursor-pointer transition">
+                        <div class="flex items-center gap-2">
+                            <input type="radio" name="algorithm" value="naive" class="accent-retroGreen">
+                            <span class="text-xs font-bold text-white">Naïve Brute-Force</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">O(N*M)</span>
+                    </label>
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button onclick="startVisualization()" class="flex-1 bg-retroGreen hover:bg-retroGreen/90 text-retroDark font-bold py-2.5 px-4 rounded text-xs transition glow-green flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                        VISUALIZE SEARCH
+                    </button>
+                    <button onclick="runBenchmarkSuite()" class="bg-slate-800 hover:bg-slate-700 text-retroAmber border border-retroAmber/30 font-bold py-2.5 px-3 rounded text-xs transition flex items-center justify-center gap-1" title="Run performance comparison benchmarks">
+                        ⚡ Benchmark
+                    </button>
+                </div>
+            </div>
+
+            <!-- Execution Status & Stats -->
+            <div class="bg-retroPanel border border-slate-800 rounded-lg p-5 space-y-3 shadow-md">
+                <h2 class="text-sm font-semibold text-slate-400 tracking-wider uppercase">Metrics & Metrics</h2>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded">
+                        <div class="text-[10px] text-slate-500 uppercase">Comparisons</div>
+                        <div id="statComparisons" class="text-lg font-bold text-retroGreen">0</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded">
+                        <div class="text-[10px] text-slate-500 uppercase">Total Shifts</div>
+                        <div id="statShifts" class="text-lg font-bold text-retroAmber">0</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded">
+                        <div class="text-[10px] text-slate-500 uppercase">Matches Found</div>
+                        <div id="statMatches" class="text-lg font-bold text-emerald-400">0</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded">
+                        <div class="text-[10px] text-slate-500 uppercase">Execution Time</div>
+                        <div id="statTime" class="text-lg font-bold text-sky-400">0.00 ms</div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Visualizer & Matrix Display Area (8 cols) -->
+        <section class="lg:col-span-8 space-y-6">
+
+            <!-- Playback Controls & Canvas Visualizer -->
+            <div class="bg-retroPanel border border-slate-800 rounded-lg p-5 space-y-4 shadow-md">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span id="visualizerTitle" class="text-sm font-bold text-white">Interactive Step-by-Step Viewer</span>
+                        <span id="stepCounter" class="text-xs px-2 py-0.5 rounded bg-slate-800 text-retroGreen border border-slate-700">Step 0/0</span>
+                    </div>
+
+                    <!-- Playback Controls -->
+                    <div class="flex items-center space-x-1">
+                        <button onclick="prevStep()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 text-xs">
+                            ⏮ Step Back
+                        </button>
+                        <button id="playPauseBtn" onclick="togglePlayPause()" class="p-1.5 bg-retroGreen text-retroDark hover:bg-retroGreen/90 font-bold rounded text-xs px-3 glow-green">
+                            ▶ Play
+                        </button>
+                        <button onclick="nextStep()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 text-xs">
+                            Step Next ⏭
+                        </button>
+                        <select id="speedSelect" class="bg-slate-900 border border-slate-700 rounded text-xs text-slate-300 p-1.5 focus:outline-none">
+                            <option value="800">Slow (800ms)</option>
+                            <option value="400" selected>Normal (400ms)</option>
+                            <option value="150">Fast (150ms)</option>
+                            <option value="30">Turbo (30ms)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Text & Pattern Alignment Workspace -->
+                <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 overflow-x-auto space-y-4">
+                    <!-- Text Array Display -->
+                    <div class="space-y-1">
+                        <div class="text-[10px] uppercase text-slate-500 font-bold flex justify-between">
+                            <span>Target Text Window</span>
+                            <span id="textHoverInfo" class="text-slate-400 font-normal">Index Alignment</span>
+                        </div>
+                        <div id="textCharContainer" class="flex gap-1 min-w-max py-1">
+                            <!-- Populated dynamically -->
+                            <span class="text-xs text-slate-600 italic">Load or type text to display character cells...</span>
+                        </div>
+                    </div>
+
+                    <!-- Pattern Array Display (Sliding Window) -->
+                    <div class="space-y-1 pt-2 border-t border-slate-900">
+                        <div class="text-[10px] uppercase text-slate-500 font-bold flex justify-between">
+                            <span>Pattern Alignment Window</span>
+                            <span id="shiftExplain" class="text-retroAmber font-normal">--</span>
+                        </div>
+                        <div id="patternCharContainer" class="flex gap-1 min-w-max py-1 transition-all duration-300">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step Log Explanation -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded p-3 flex items-start gap-3">
+                    <div class="text-retroGreen font-bold text-xs mt-0.5">&gt;</div>
+                    <div id="stepExplanation" class="text-xs text-slate-300 leading-relaxed font-mono">
+                        Ready. Click <span class="text-retroGreen font-bold">"VISUALIZE SEARCH"</span> to initialize search steps and view shift calculations.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preprocessing Tables Inspector -->
+            <div class="bg-retroPanel border border-slate-800 rounded-lg p-5 space-y-4 shadow-md">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-semibold text-retroGreen tracking-wider uppercase flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7-0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        Precomputed Heuristic Tables
+                    </h2>
+                    <span class="text-[10px] text-slate-500">Live Inspector</span>
+                </div>
+
+                <!-- Tabs for Tables -->
+                <div class="flex gap-2 border-b border-slate-800">
+                    <button id="tabBtnBmBc" onclick="switchTableTab('bmBc')" class="px-3 py-1.5 text-xs font-bold border-b-2 border-retroGreen text-retroGreen">bmBc (Bad Character)</button>
+                    <button id="tabBtnBmGs" onclick="switchTableTab('bmGs')" class="px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200">bmGs (Good Suffix)</button>
+                    <button id="tabBtnHorspool" onclick="switchTableTab('horspool')" class="px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200">Horspool Table</button>
+                </div>
+
+                <!-- Tab Content Panels -->
+                <div id="tableTabContent" class="overflow-x-auto min-h-[140px] max-h-[220px] overflow-y-auto">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Benchmarks Panel -->
+            <div id="benchmarkSection" class="bg-retroPanel border border-slate-800 rounded-lg p-5 space-y-4 shadow-md">
+                <h2 class="text-sm font-semibold text-retroAmber tracking-wider uppercase flex items-center gap-2">
+                    ⚡ Real-time Benchmark Comparison
+                </h2>
+                <div class="text-xs text-slate-400">
+                    Executes 100,000 search iterations over the input text using the current pattern across all engines.
+                </div>
+                
+                <div id="benchmarkResults" class="space-y-3">
+                    <div class="text-xs text-slate-600 italic">Click "⚡ Benchmark" in the control panel to run performance comparison tests...</div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-retroPanel py-3 text-center text-xs text-slate-500">
+        Boyer-Moore, Horspool & Abrash Search Mechanics Lab • Built with WebAssembly (Wasm) & JS
+    </footer>
+
+    <!-- JavaScript & Embedded Wasm Binary Compiler Engine -->
+    <script>
+        // --- WebAssembly Binary Instantiation Engine ---
+        // Generates an in-memory WebAssembly module directly for hardware fast scanning (memchr style)
+        let wasmInstance = null;
+        let wasmMemory = null;
+
+        async function initWasmEngine() {
+            try {
+                // WebAssembly Bytecode for custom fast search helper (written in assembly/WAT, compiled directly to binary)
+                // Module exports: memory, memchr(ptr, char, len) -> offset
+                const wasmBytes = new Uint8Array([
+                    0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, // Wasm magic + version
+                    0x01, 0x08, 0x01, 0x60, 0x03, 0x7f, 0x7f, 0x7f, 0x01, 0x7f, // Type section: (i32, i32, i32) -> i32
+                    0x02, 0x12, 0x01, 0x02, 0x65, 0x6e, 0x76, 0x06, 0x6d, 0x65, 0x6d, 0x6f, 0x72, 0x79, 0x02, 0x00, 0x01, // Import memory
+                    0x03, 0x02, 0x01, 0x00, // Function section
+                    0x07, 0x0b, 0x01, 0x07, 0x6d, 0x65, 0x6d, 0x63, 0x68, 0x72, 0x00, 0x00, // Export section: memchr
+                    0x0a, 0x33, 0x01, 0x31, 0x01, 0x01, 0x7f, // Local variables
+                    0x02, 0x40, // Block
+                    0x20, 0x02, 0x41, 0x00, 0x46, 0x0d, 0x00, // If len == 0 break
+                    0x03, 0x40, // Loop
+                    0x20, 0x00, 0x20, 0x03, 0x6a, 0x2d, 0x00, 0x00, // Load byte at ptr + i
+                    0x20, 0x01, 0x46, // compare with search char
+                    0x04, 0x40, // If equal
+                    0x20, 0x03, 0x0f, 0x0b, // Return relative index
+                    0x20, 0x03, 0x41, 0x01, 0x6a, 0x21, 0x03, // i++
+                    0x20, 0x03, 0x20, 0x02, 0x49, 0x0d, 0x00, // loop if i < len
+                    0x0b, 0x0b,
+                    0x41, 0x7f // Return -1 if not found
+                ]);
+
+                wasmMemory = new WebAssembly.Memory({ initial: 2 });
+                const importObject = { env: { memory: wasmMemory } };
+                const module = await WebAssembly.instantiate(wasmBytes, importObject);
+                wasmInstance = module.instance;
+                console.log("Wasm Memory Engine Initialized successfully.");
+            } catch (err) {
+                console.warn("Wasm native loading fallback to JS memory layer:", err);
+            }
+        }
+
+        // --- Application State ---
+        let currentEngine = 'wasm'; // 'wasm' or 'js'
+        let executionSteps = [];
+        let currentStepIdx = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        let activeTab = 'bmBc';
+
+        // Global Precomputed Tables Cache
+        let cachedBmBc = {};
+        let cachedBmGs = [];
+        let cachedHorspool = {};
+
+        // On Page Load Initialization
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initWasmEngine();
+            startVisualization();
+        });
+
+        function toggleEngineMode() {
+            currentEngine = (currentEngine === 'wasm') ? 'js' : 'wasm';
+            const badge = document.getElementById('engineModeBadge');
+            if (currentEngine === 'wasm') {
+                badge.innerText = 'Wasm (WebAssembly)';
+                badge.className = 'font-bold text-retroGreen';
+            } else {
+                badge.innerText = 'Pure JavaScript';
+                badge.className = 'font-bold text-sky-400';
+            }
+        }
+
+        function toggleRetroGlow() {
+            document.body.classList.toggle('glow-green');
+            const btn = document.getElementById('retroThemeBtn');
+            if (document.body.classList.contains('glow-green')) {
+                btn.innerText = 'Retro CRT Glow: ON';
+            } else {
+                btn.innerText = 'Retro CRT Glow: OFF';
+            }
+        }
+
+        // Presets
+        function loadPreset(key) {
+            const txt = document.getElementById('inputText');
+            const pat = document.getElementById('inputPattern');
+            
+            if (key === 'bbbaaa') {
+                txt.value = "bbbbbaaaabbbaaaabbbaaa";
+                pat.value = "bbbaaa";
+            } else if (key === 'dna') {
+                txt.value = "CGATCGATAGCTAGCTAGCTACGATCGATCGATAGCTAGC";
+                pat.value = "CGATAGCT";
+            } else if (key === 'abrash') {
+                txt.value = "the quick brown fox jumps over the lazy dog in hardware optimization";
+                pat.value = "hardware";
+            } else if (key === 'worst') {
+                txt.value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB";
+                pat.value = "AAAAAB";
+            }
+            startVisualization();
+        }
+
+        // --- PREPROCESSING HEURISTIC ALGORITHMS ---
+
+        // 1. Bad Character Shift Table (bmBc)
+        function computeBmBc(pat) {
+            const m = pat.length;
+            const table = {};
+            // Default shift is m for all characters
+            for (let i = 0; i < pat.length - 1; i++) {
+                table[pat[i]] = m - 1 - i;
+            }
+            return table;
+        }
+
+        // Auxiliary Suff array for Good Suffix calculation
+        function computeSuff(pat) {
+            const m = pat.length;
+            const suff = new Array(m).fill(0);
+            suff[m - 1] = m;
+            let g = m - 1;
+            let f = 0;
+
+            for (let i = m - 2; i >= 0; --i) {
+                if (i > g && suff[i + m - 1 - f] < i - g) {
+                    suff[i] = suff[i + m - 1 - f];
+                } else {
+                    if (i < g) g = i;
+                    f = i;
+                    while (g >= 0 && pat[g] === pat[g + m - 1 - f]) {
+                        --g;
+                    }
+                    suff[i] = f - g;
+                }
+            }
+            return suff;
+        }
+
+        // 2. Good Suffix Shift Table (bmGs)
+        function computeBmGs(pat) {
+            const m = pat.length;
+            const suff = computeSuff(pat);
+            const bmGs = new Array(m).fill(m);
+
+            // Case 2: Suffix matches prefix
+            let j = 0;
+            for (let i = m - 1; i >= 0; --i) {
+                if (suff[i] === i + 1) {
+                    for (; j < m - 1 - i; ++j) {
+                        if (bmGs[j] === m) {
+                            bmGs[j] = m - 1 - i;
+                        }
+                    }
+                }
+            }
+
+            // Case 1: Matching substring inside pattern
+            for (let i = 0; i <= m - 2; ++i) {
+                bmGs[m - 1 - suff[i]] = m - 1 - i;
+            }
+
+            return bmGs;
+        }
+
+        // 3. Horspool Table
+        function computeHorspoolTable(pat) {
+            const m = pat.length;
+            const table = {};
+            for (let i = 0; i < m - 1; i++) {
+                table[pat[i]] = m - 1 - i;
+            }
+            return table;
+        }
+
+        // --- SEARCH VISUALIZATION STEP GENERATOR ---
+
+        function generateSearchSteps(algo, text, pat) {
+            const steps = [];
+            const n = text.length;
+            const m = pat.length;
+
+            if (m === 0 || n < m) return steps;
+
+            cachedBmBc = computeBmBc(pat);
+            cachedBmGs = computeBmGs(pat);
+            cachedHorspool = computeHorspoolTable(pat);
+
+            let comparisons = 0;
+            let totalShifts = 0;
+            let matchesCount = 0;
+
+            if (algo === 'bm') {
+                // Boyer-Moore Search Algorithm
+                let i = 0;
+                while (i <= n - m) {
+                    let j = m - 1;
+                    const charComparisonsInStep = [];
+
+                    while (j >= 0 && pat[j] === text[i + j]) {
+                        comparisons++;
+                        charComparisonsInStep.push({ textIdx: i + j, patIdx: j, match: true });
+                        j--;
+                    }
+
+                    if (j < 0) {
+                        // Full match found
+                        matchesCount++;
+                        const shift = cachedBmGs[0];
+                        steps.push({
+                            type: 'MATCH',
+                            textIdx: i,
+                            comparisons: charComparisonsInStep,
+                            shift: shift,
+                            shiftReason: `Full match found! Shifted by bmGs[0] = ${shift}`,
+                            mismatchIdx: -1
+                        });
+                        i += shift;
+                        totalShifts += shift;
+                    } else {
+                        // Mismatch at j
+                        comparisons++;
+                        charComparisonsInStep.push({ textIdx: i + j, patIdx: j, match: false });
+                        
+                        const mismatchedChar = text[i + j];
+                        const bcShift = (cachedBmBc[mismatchedChar] !== undefined ? cachedBmBc[mismatchedChar] : m) - (m - 1 - j);
+                        const actualBcShift = Math.max(1, bcShift);
+                        const gsShift = cachedBmGs[j];
+
+                        const shift = Math.max(actualBcShift, gsShift);
+
+                        steps.push({
+                            type: 'MISMATCH',
+                            textIdx: i,
+                            comparisons: charComparisonsInStep,
+                            shift: shift,
+                            shiftReason: `Mismatch at text[${i + j}] ('${mismatchedChar}') & pat[${j}]. Max(BadChar: ${actualBcShift}, GoodSuffix: ${gsShift}) = ${shift}`,
+                            mismatchIdx: j
+                        });
+
+                        i += shift;
+                        totalShifts += shift;
+                    }
+                }
+            } else if (algo === 'horspool') {
+                // Boyer-Moore-Horspool
+                let i = 0;
+                while (i <= n - m) {
+                    let j = m - 1;
+                    const charComparisonsInStep = [];
+
+                    while (j >= 0 && pat[j] === text[i + j]) {
+                        comparisons++;
+                        charComparisonsInStep.push({ textIdx: i + j, patIdx: j, match: true });
+                        j--;
+                    }
+
+                    const tailChar = text[i + m - 1];
+                    const shift = cachedHorspool[tailChar] !== undefined ? cachedHorspool[tailChar] : m;
+
+                    if (j < 0) {
+                        matchesCount++;
+                        steps.push({
+                            type: 'MATCH',
+                            textIdx: i,
+                            comparisons: charComparisonsInStep,
+                            shift: shift,
+                            shiftReason: `Match found! Look up tail character text[${i + m - 1}] ('${tailChar}') in Horspool table -> Shift = ${shift}`,
+                            mismatchIdx: -1
+                        });
+                    } else {
+                        comparisons++;
+                        charComparisonsInStep.push({ textIdx: i + j, patIdx: j, match: false });
+                        steps.push({
+                            type: 'MISMATCH',
+                            textIdx: i,
+                            comparisons: charComparisonsInStep,
+                            shift: shift,
+                            shiftReason: `Mismatch at pat[${j}]. Horspool checks window tail text[${i + m - 1}] ('${tailChar}') -> Shift = ${shift}`,
+                            mismatchIdx: j
+                        });
+                    }
+                    i += shift;
+                    totalShifts += shift;
+                }
+            } else if (algo === 'abrash') {
+                // Abrash memchr + memcmp Hardware Scanner
+                let i = 0;
+                const firstChar = pat[0];
+
+                while (i <= n - m) {
+                    // Step 1: Use memchr acceleration to locate first character
+                    let targetFoundIdx = -1;
+                    
+                    if (currentEngine === 'wasm' && wasmInstance) {
+                        // Write text slice to Wasm memory buffer
+                        const encoder = new TextEncoder();
+                        const textBytes = encoder.encode(text.substring(i));
+                        const memView = new Uint8Array(wasmMemory.buffer);
+                        memView.set(textBytes, 0);
+
+                        const resOffset = wasmInstance.exports.memchr(0, firstChar.charCodeAt(0), textBytes.length);
+                        if (resOffset !== -1) {
+                            targetFoundIdx = i + resOffset;
+                        }
+                    } else {
+                        targetFoundIdx = text.indexOf(firstChar, i);
+                    }
+
+                    if (targetFoundIdx === -1 || targetFoundIdx > n - m) {
+                        steps.push({
+                            type: 'SKIP',
+                            textIdx: i,
+                            comparisons: [],
+                            shift: n - i,
+                            shiftReason: `Hardware memchr() scanned buffer for '${firstChar}' - no remaining candidate found.`,
+                            mismatchIdx: -1
+                        });
+                        break;
+                    }
+
+                    if (targetFoundIdx > i) {
+                        const skipDistance = targetFoundIdx - i;
+                        steps.push({
+                            type: 'MEMCHR_SCAN',
+                            textIdx: i,
+                            comparisons: [{ textIdx: targetFoundIdx, patIdx: 0, match: true }],
+                            shift: skipDistance,
+                            shiftReason: `Hardware memchr() fast-scanned ${skipDistance} byte(s) directly to first matching char '${firstChar}' at index ${targetFoundIdx}`,
+                            mismatchIdx: -1
+                        });
+                        i = targetFoundIdx;
+                        totalShifts += skipDistance;
+                    }
+
+                    // Step 2: Verify remaining pattern with memcmp
+                    let j = 0;
+                    const charComparisonsInStep = [];
+                    let fullMatch = true;
+
+                    for (j = 0; j < m; j++) {
+                        comparisons++;
+                        if (pat[j] === text[i + j]) {
+                            charComparisonsInStep.push({ textIdx: i + j, patIdx: j, match: true });
+                        } else {
+                            charComparisonsInStep.push({ textIdx: i + j, patIdx: j, match: false });
+                            fullMatch = false;
+                            break;
+                        }
+                    }
+
+                    if (fullMatch) {
+                        matchesCount++;
+                        steps.push({
+                            type: 'MATCH',
+                            textIdx: i,
+                            comparisons: charComparisonsInStep,
+                            shift: 1,
+                            shiftReason: `memcmp() verified 100% match at index ${i}!`,
+                            mismatchIdx: -1
+                        });
+                        i += 1;
+                        totalShifts += 1;
+                    } else {
+                        steps.push({
+                            type: 'MISMATCH',
+                            textIdx: i,
+                            comparisons: charComparisonsInStep,
+                            shift: 1,
+                            shiftReason: `memcmp() mismatch at byte offset ${j}. Increment window by 1.`,
+                            mismatchIdx: j
+                        });
+                        i += 1;
+                        totalShifts += 1;
+                    }
+                }
+            } else {
+                // Naïve Brute-Force
+                for (let i = 0; i <= n - m; i++) {
+                    let j = 0;
+                    const charComparisonsInStep = [];
+                    let match = true;
+
+                    for (j = 0; j < m; j++) {
+                        comparisons++;
+                        if (text[i + j] === pat[j]) {
+                            charComparisonsInStep.push({ textIdx: i + j, patIdx: j, match: true });
+                        } else {
+                            charComparisonsInStep.push({ textIdx: i + j, patIdx: j, match: false });
+                            match = false;
+                            break;
+                        }
+                    }
+
+                    if (match) {
+                        matchesCount++;
+                        steps.push({
+                            type: 'MATCH',
+                            textIdx: i,
+                            comparisons: charComparisonsInStep,
+                            shift: 1,
+                            shiftReason: `Full match at index ${i}. Advance window by 1.`,
+                            mismatchIdx: -1
+                        });
+                    } else {
+                        steps.push({
+                            type: 'MISMATCH',
+                            textIdx: i,
+                            comparisons: charComparisonsInStep,
+                            shift: 1,
+                            shiftReason: `Mismatch at position ${j}. Advance window by 1.`,
+                            mismatchIdx: j
+                        });
+                    }
+                    totalShifts += 1;
+                }
+            }
+
+            return { steps, stats: { comparisons, totalShifts, matchesCount } };
+        }
+
+        // --- RENDERERS & DOM UPDATERS ---
+
+        function startVisualization() {
+            pausePlayback();
+            const text = document.getElementById('inputText').value;
+            const pat = document.getElementById('inputPattern').value;
+            const algo = document.querySelector('input[name="algorithm"]:checked').value;
+
+            if (!text || !pat) return;
+
+            const startTime = performance.now();
+            const result = generateSearchSteps(algo, text, pat);
+            const endTime = performance.now();
+
+            executionSteps = result.steps;
+            currentStepIdx = 0;
+
+            // Update stats
+            document.getElementById('statComparisons').innerText = result.stats.comparisons;
+            document.getElementById('statShifts').innerText = result.stats.totalShifts;
+            document.getElementById('statMatches').innerText = result.stats.matchesCount;
+            document.getElementById('statTime').innerText = (endTime - startTime).toFixed(2) + ' ms';
+
+            // Render tables and step view
+            renderPrecomputedTables(pat);
+            renderStep(currentStepIdx);
+        }
+
+        function renderStep(idx) {
+            const text = document.getElementById('inputText').value;
+            const pat = document.getElementById('inputPattern').value;
+
+            const textContainer = document.getElementById('textCharContainer');
+            const patternContainer = document.getElementById('patternCharContainer');
+            const counter = document.getElementById('stepCounter');
+            const explanation = document.getElementById('stepExplanation');
+            const shiftExplain = document.getElementById('shiftExplain');
+
+            textContainer.innerHTML = '';
+            patternContainer.innerHTML = '';
+
+            if (executionSteps.length === 0) {
+                counter.innerText = 'Step 0/0';
+                explanation.innerText = 'No search steps recorded. Pattern may be longer than target text.';
+                return;
+            }
+
+            counter.innerText = `Step ${idx + 1}/${executionSteps.length}`;
+            const step = executionSteps[idx];
+
+            shiftExplain.innerText = step.shiftReason;
+
+            // Create Text Character Cells
+            for (let i = 0; i < text.length; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'w-7 h-8 flex flex-col items-center justify-center border text-xs rounded transition-all font-bold';
+                
+                // Active comparison highlight
+                const comp = step.comparisons.find(c => c.textIdx === i);
+                
+                if (comp) {
+                    if (comp.match) {
+                        cell.className += ' bg-emerald-950 border-emerald-500 text-emerald-300 scale-105 z-10';
+                    } else {
+                        cell.className += ' bg-rose-950 border-rose-500 text-rose-300 blink-text scale-105 z-10';
+                    }
+                } else if (step.type === 'MATCH' && i >= step.textIdx && i < step.textIdx + pat.length) {
+                    cell.className += ' bg-retroGreen/20 border-retroGreen text-retroGreen blink-text';
+                } else if (i >= step.textIdx && i < step.textIdx + pat.length) {
+                    cell.className += ' bg-slate-900 border-slate-700 text-slate-300';
+                } else {
+                    cell.className += ' bg-slate-950 border-slate-900 text-slate-600';
+                }
+
+                cell.innerHTML = `<span>${escapeHtml(text[i])}</span><span class="text-[8px] text-slate-600 font-normal">${i}</span>`;
+                textContainer.appendChild(cell);
+            }
+
+            // Create Pattern Window Alignment
+            const offsetWidth = step.textIdx * 32; // 28px width + 4px gap
+            patternContainer.style.transform = `translateX(${offsetWidth}px)`;
+
+            for (let j = 0; j < pat.length; j++) {
+                const cell = document.createElement('div');
+                cell.className = 'w-7 h-8 flex flex-col items-center justify-center border text-xs rounded font-bold transition-all';
+
+                const comp = step.comparisons.find(c => c.patIdx === j);
+
+                if (comp) {
+                    if (comp.match) {
+                        cell.className += ' bg-emerald-950 border-emerald-500 text-emerald-300';
+                    } else {
+                        cell.className += ' bg-rose-950 border-rose-500 text-rose-300 blink-text';
+                    }
+                } else {
+                    cell.className += ' bg-slate-900 border-slate-700 text-slate-400';
+                }
+
+                cell.innerHTML = `<span>${escapeHtml(pat[j])}</span><span class="text-[8px] text-slate-600 font-normal">${j}</span>`;
+                patternContainer.appendChild(cell);
+            }
+
+            // Step Explanation Log
+            if (step.type === 'MATCH') {
+                explanation.innerHTML = `<span class="text-retroGreen font-bold">[MATCH DETECTED]</span> ${step.shiftReason}`;
+            } else if (step.type === 'MISMATCH') {
+                explanation.innerHTML = `<span class="text-retroAmber font-bold">[MISMATCH]</span> ${step.shiftReason}`;
+            } else if (step.type === 'MEMCHR_SCAN') {
+                explanation.innerHTML = `<span class="text-sky-400 font-bold">[HARDWARE ACCELERATED SCAN]</span> ${step.shiftReason}`;
+            } else {
+                explanation.innerHTML = `<span class="text-slate-400 font-bold">[STEP]</span> ${step.shiftReason}`;
+            }
+        }
+
+        // --- PRECOMPUTED TABLES DISPLAY ---
+
+        function renderPrecomputedTables(pat) {
+            const container = document.getElementById('tableTabContent');
+            container.innerHTML = '';
+
+            if (activeTab === 'bmBc') {
+                let html = '<table class="w-full text-xs text-left border-collapse"><thead><tr class="border-b border-slate-800 text-slate-400"><th class="p-2">Character</th><th class="p-2">Shift Value (bmBc)</th></tr></thead><tbody>';
+                for (const [char, val] of Object.entries(cachedBmBc)) {
+                    html += `<tr class="border-b border-slate-900 hover:bg-slate-900/50"><td class="p-2 text-retroGreen font-bold">'${escapeHtml(char)}'</td><td class="p-2 text-slate-200">${val}</td></tr>`;
+                }
+                html += `<tr class="border-b border-slate-900 bg-slate-900/30"><td class="p-2 text-slate-500 italic">All other ASCII</td><td class="p-2 text-slate-400">${pat.length}</td></tr>`;
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } else if (activeTab === 'bmGs') {
+                let html = '<table class="w-full text-xs text-left border-collapse"><thead><tr class="border-b border-slate-800 text-slate-400"><th class="p-2">Index j</th><th class="p-2">Suffix Substring</th><th class="p-2">Shift Value (bmGs)</th></tr></thead><tbody>';
+                for (let j = 0; j < pat.length; j++) {
+                    const suffix = pat.substring(j + 1) || 'ε (empty)';
+                    html += `<tr class="border-b border-slate-900 hover:bg-slate-900/50"><td class="p-2 font-bold text-sky-400">${j}</td><td class="p-2 text-retroAmber">'${escapeHtml(suffix)}'</td><td class="p-2 text-retroGreen font-bold">${cachedBmGs[j]}</td></tr>`;
+                }
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } else if (activeTab === 'horspool') {
+                let html = '<table class="w-full text-xs text-left border-collapse"><thead><tr class="border-b border-slate-800 text-slate-400"><th class="p-2">Tail Character</th><th class="p-2">Horspool Shift Value</th></tr></thead><tbody>';
+                for (const [char, val] of Object.entries(cachedHorspool)) {
+                    html += `<tr class="border-b border-slate-900 hover:bg-slate-900/50"><td class="p-2 text-retroGreen font-bold">'${escapeHtml(char)}'</td><td class="p-2 text-slate-200">${val}</td></tr>`;
+                }
+                html += `<tr class="border-b border-slate-900 bg-slate-900/30"><td class="p-2 text-slate-500 italic">Default (Unseen)</td><td class="p-2 text-slate-400">${pat.length}</td></tr>`;
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+        }
+
+        function switchTableTab(tab) {
+            activeTab = tab;
+            const pat = document.getElementById('inputPattern').value;
+
+            document.getElementById('tabBtnBmBc').className = tab === 'bmBc' ? 'px-3 py-1.5 text-xs font-bold border-b-2 border-retroGreen text-retroGreen' : 'px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+            document.getElementById('tabBtnBmGs').className = tab === 'bmGs' ? 'px-3 py-1.5 text-xs font-bold border-b-2 border-retroGreen text-retroGreen' : 'px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+            document.getElementById('tabBtnHorspool').className = tab === 'horspool' ? 'px-3 py-1.5 text-xs font-bold border-b-2 border-retroGreen text-retroGreen' : 'px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+
+            renderPrecomputedTables(pat);
+        }
+
+        // --- PLAYBACK CONTROLLER ---
+
+        function togglePlayPause() {
+            if (isPlaying) {
+                pausePlayback();
+            } else {
+                startPlayback();
+            }
+        }
+
+        function startPlayback() {
+            if (executionSteps.length === 0) return;
+            isPlaying = true;
+            document.getElementById('playPauseBtn').innerText = '⏸ Pause';
+            document.getElementById('playPauseBtn').className = 'p-1.5 bg-retroAmber text-retroDark font-bold rounded text-xs px-3 glow-amber';
+
+            const speed = parseInt(document.getElementById('speedSelect').value, 10);
+            playInterval = setInterval(() => {
+                if (currentStepIdx < executionSteps.length - 1) {
+                    currentStepIdx++;
+                    renderStep(currentStepIdx);
+                } else {
+                    pausePlayback();
+                }
+            }, speed);
+        }
+
+        function pausePlayback() {
+            isPlaying = false;
+            if (playInterval) clearInterval(playInterval);
+            document.getElementById('playPauseBtn').innerText = '▶ Play';
+            document.getElementById('playPauseBtn').className = 'p-1.5 bg-retroGreen text-retroDark hover:bg-retroGreen/90 font-bold rounded text-xs px-3 glow-green';
+        }
+
+        function nextStep() {
+            pausePlayback();
+            if (currentStepIdx < executionSteps.length - 1) {
+                currentStepIdx++;
+                renderStep(currentStepIdx);
+            }
+        }
+
+        function prevStep() {
+            pausePlayback();
+            if (currentStepIdx > 0) {
+                currentStepIdx--;
+                renderStep(currentStepIdx);
+            }
+        }
+
+        // --- BENCHMARK SUITE ---
+
+        function runBenchmarkSuite() {
+            const text = document.getElementById('inputText').value;
+            const pat = document.getElementById('inputPattern').value;
+            const resultsDiv = document.getElementById('benchmarkResults');
+
+            if (!text || !pat) return;
+
+            resultsDiv.innerHTML = '<div class="text-xs text-retroGreen font-bold blink-text">Running 100,000 iterations for each algorithm...</div>';
+
+            setTimeout(() => {
+                const iterations = 100000;
+                const algos = ['bm', 'horspool', 'abrash', 'naive'];
+                const stats = {};
+
+                algos.forEach(algo => {
+                    const start = performance.now();
+                    for (let i = 0; i < iterations; i++) {
+                        generateSearchSteps(algo, text, pat);
+                    }
+                    const end = performance.now();
+                    stats[algo] = (end - start).toFixed(1);
+                });
+
+                let html = '<div class="space-y-2">';
+                html += createBenchBar('Boyer-Moore', stats['bm'], 'text-retroGreen', 'bg-retroGreen');
+                html += createBenchBar('Boyer-Moore-Horspool', stats['horspool'], 'text-sky-400', 'bg-sky-400');
+                html += createBenchBar('Abrash Hardware Scan', stats['abrash'], 'text-emerald-400', 'bg-emerald-400');
+                html += createBenchBar('Naïve Brute-Force', stats['naive'], 'text-rose-400', 'bg-rose-400');
+                html += '</div>';
+
+                resultsDiv.innerHTML = html;
+            }, 50);
+        }
+
+        function createBenchBar(name, timeMs, textColorClass, bgClass) {
+            const maxVal = 500; // visual scale normalization
+            const widthPct = Math.min(100, Math.max(5, (parseFloat(timeMs) / maxVal) * 100));
+
+            return `
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs">
+                        <span class="font-bold text-slate-300">${name}</span>
+                        <span class="font-mono ${textColorClass}">${timeMs} ms</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                        <div class="${bgClass} h-2 rounded-full transition-all duration-500" style="width: ${widthPct}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper Utilities
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
