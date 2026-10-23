@@ -405,9 +405,14 @@ int SearchBM(char *x, int m, char *y, int n) {
     static bool once = true;
     if (once) {
         once = false;
-        printf("bmGs: ");
+        printf("bmBc:\n");
+        for (int k = 0; k < ASIZE; k++) {
+            printf("%03d '%c': %d\n", k, (k >= 32 && k <= 126) ? k : '.', bmBc[k]);
+        }
+        printf("\n\n");
+        printf("bmGs:\n");
         for (int k = 0; k < m; k++) {
-            printf("%d ", bmGs[k]);
+            printf("%03d '%c': %d\n", k, y[k], bmGs[k]);
         }
         printf("\n\n");
     }
