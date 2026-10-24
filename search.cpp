@@ -134,7 +134,7 @@ long result = 0;
 //		 Blazingly fast. Beats Boyer-Moore.
 //-----------------------------------------------------------------------------
 int SearchForString(unsigned char *Buffer, int SearchLength,
-                  unsigned char *SearchString, int SearchStringLength)
+                    unsigned char *SearchString, int SearchStringLength)
 {
 	unsigned char *PotentialMatch;
 
@@ -142,38 +142,38 @@ int SearchForString(unsigned char *Buffer, int SearchLength,
 	pdest = Buffer;	
 	
 
-   /* Search so long as there are potential-match locations
-      remaining */
-   while ( SearchLength ) {
-      /* See if the first character of SearchString can be found */
-      if ( (PotentialMatch =
-            (unsigned char*)memchr(Buffer, *SearchString, SearchLength)) == NULL ) {
-         break;   /* no matches in this buffer */
-      }
+    /* Search so long as there are potential-match locations
+        remaining */
+    while ( SearchLength ) {
+        /* See if the first character of SearchString can be found */
+        if ( (PotentialMatch =
+                (unsigned char*)memchr(Buffer, *SearchString, SearchLength)) == NULL ) {
+            break;   /* no matches in this buffer */
+        }
 
-      /* The first character matches; see if the rest of the string
-         also matches */
-      if ( SearchStringLength == 1 ) {
-		 // NEW: get position of search string in the buffer
-		 result = PotentialMatch - pdest;
-         return(1);  /* that 1 matching character was the whole
-                        search string, so we've got a match */
-      } else {
-         /* Check whether the remaining characters match */
-         if ( !memcmp(PotentialMatch + 1, SearchString + 1,
-               SearchStringLength - 1) ) {
-			// NEW: get position of search string in the buffer
-			result = PotentialMatch - pdest;
-            return(1);  /* we've got a match */
-         }
-      }
+        /* The first character matches; see if the rest of the string
+            also matches */
+        if ( SearchStringLength == 1 ) {
+            // NEW: get position of search string in the buffer
+            result = PotentialMatch - pdest;
+            return(1);  /* that 1 matching character was the whole
+                            search string, so we've got a match */
+        } else {
+            /* Check whether the remaining characters match */
+            if ( !memcmp(PotentialMatch + 1, SearchString + 1,
+                SearchStringLength - 1) ) {
+                // NEW: get position of search string in the buffer
+                result = PotentialMatch - pdest;
+                return(1);  /* we've got a match */
+            }
+        }
 
-      /* The string doesn't match; keep going by pointing past the
-         potential-match location we just rejected */
-      SearchLength -= PotentialMatch - Buffer + 1;
-      Buffer = PotentialMatch + 1;
+        /* The string doesn't match; keep going by pointing past the
+            potential-match location we just rejected */
+        SearchLength -= PotentialMatch - Buffer + 1;
+        Buffer = PotentialMatch + 1;
 
-   }
+    }
 
    return(0);  /* no match found */
 }
@@ -576,8 +576,8 @@ start:
         switch (search_algo)
         {
         case 1:
-            printf("1. SearchString\n");
-            results.push_back({"SearchString", elapsed_time / number_of_searches});
+            printf("1. SearchForString\n");
+            results.push_back({"SearchForString", elapsed_time / number_of_searches});
             break;
         case 2:
             printf("2. bmsearch\n");
@@ -661,7 +661,7 @@ start:
         switch (search_algo)
         {
         case 1:
-            printf("1. SearchString\n");
+            printf("1. SearchForString\n");
             break;
         case 2:
             printf("2. bmsearch\n");
