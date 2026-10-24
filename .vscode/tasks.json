@@ -8,6 +8,7 @@
       "args": [
         "-std=c++17",
         "-g",
+        "-O3",
         "${workspaceFolder}/search.cpp",
         "${workspaceFolder}/graph.cpp",
         "${workspaceFolder}/fsif.cpp",
