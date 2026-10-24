@@ -6,9 +6,8 @@
       "type": "process",
       "command": "clang++",
       "args": [
-        "-std=c++17",
+        "-std=c++20",
         "-g",
-        "-O3",
         "${workspaceFolder}/search.cpp",
         "${workspaceFolder}/graph.cpp",
         "${workspaceFolder}/fsif.cpp",
@@ -31,7 +30,7 @@
       "label": "C/C++: clang build active file",
       "command": "/usr/bin/clang++",
       "args": [
-        "-std=c++17",
+        "-std=c++20",
         "-fcolor-diagnostics",
         "-fansi-escape-codes",
         "-g",

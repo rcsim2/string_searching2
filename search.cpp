@@ -4,7 +4,7 @@
 // Desc: Searches file for a string. Adapted from Michael Abrash's Blackbook,
 //		 Listing 5.1
 //
-// Note: uses the memchr()/memcmp() method. Optimized brute-force. Blazingly fast.
+// Note: Uses the memchr()/memcmp() method. Optimized brute-force. Blazingly fast.
 //		 Beats Boyer-Moore.
 //
 // Copyright (c) 2000 Black Sphere Corp.
@@ -70,7 +70,10 @@
 #include <unistd.h>
 #include <chrono>
 #include <iostream>
-
+#include <vector>
+//#include <format>
+//#include <iomanip>
+#include <string_view>
 
 struct perf {
     std::chrono::steady_clock::time_point start_;
@@ -80,6 +83,12 @@ struct perf {
         std::chrono::duration<double> elapsed_seconds = stop - start_;
         return elapsed_seconds.count();
     }
+};
+
+
+struct BenchmarkResult {
+    std::string name;
+    double duration_ms;
 };
 
 
@@ -121,7 +130,7 @@ long result = 0;
    to the last possible start of a matching sequence in the buffer */
 //-----------------------------------------------------------------------------
 // Name: SearchForString()
-// Desc: Optimized brute-force string searching. uses the memchr()/memcmp() method.
+// Desc: Optimized brute-force string searching. Uses the memchr()/memcmp() method.
 //		 Blazingly fast. Beats Boyer-Moore.
 //-----------------------------------------------------------------------------
 int SearchForString(unsigned char *Buffer, int SearchLength,
@@ -168,6 +177,36 @@ int SearchForString(unsigned char *Buffer, int SearchLength,
 
    return(0);  /* no match found */
 }
+
+
+
+//-----------------------------------------------------------------------------
+// Name: SearchStdStringView()
+// Desc: Uses std::string_view::find(). Beats Abrash.
+//-----------------------------------------------------------------------------
+int SearchStdStringView(const unsigned char *buffer, int buffer_length,
+                        const unsigned char *search_string, int search_string_length) 
+{
+    if (search_string_length <= 0 || buffer_length <= 0 || search_string_length > buffer_length) {
+        return 0; // 0 = no match found
+    }
+
+    // Zero-copy wrap of the raw buffers
+    std::string_view text(reinterpret_cast<const char*>(buffer), buffer_length);
+    std::string_view pattern(reinterpret_cast<const char*>(search_string), search_string_length);
+
+    size_t pos = text.find(pattern);
+    
+    if (pos == std::string_view::npos) {
+        return 0; // 0 = no match found
+    }
+
+    // Store the 0-based offset into 'result' just like Abrash's code
+    result = static_cast<int>(pos);
+
+    return 1; // 1 = match found
+}
+///////////////////////////////////////
 
 
 
@@ -287,7 +326,8 @@ int main(int argc, char *argv[]) {
     // after a few iterations. The external console can handle it.
     int number_of_searches = 0;
     double elapsed_time = 0.0;
-    int search_algo = 1; 
+    int search_algo = 1;
+    std::vector<BenchmarkResult> results;
     
 start:
     if (lseek(Handle, 0, SEEK_SET) == -1) {
@@ -379,7 +419,7 @@ start:
 
             switch (search_algo) {
                 case 1:
-                    search_result = SearchForString(WorkingBlock, BlockSearchLength, SearchString, SearchStringLength);
+                    search_result = SearchForString(WorkingBlock, WorkingLength, SearchString, SearchStringLength);
                     break;
                 case 2:
                     search_result = bmsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength);
@@ -400,7 +440,19 @@ start:
                     search_result = SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
                     break;
                 case 8:
+                    search_result = SearchKMP((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
+                    break;
+                case 9:
+                    search_result = SearchHORSPOOL((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
+                    break;
+                case 10:
                     search_result = Algorithm::SearchGS((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
+                    break;
+                case 11:
+                    search_result = SearchQS((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
+                    break;
+                case 12:
+                    search_result = SearchStdStringView(WorkingBlock, WorkingLength, SearchString, SearchStringLength);
                     break;
             }
 
@@ -455,7 +507,6 @@ start:
             // the search string when it is at the very end of the file.
             //if ( SearchAUT((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength) )
             //if ( SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength) )
-
             //if ( SearchTBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchTUNEDBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
             //if ( SearchKMP((char*)SearchString, SearchStringLength, (char*)WorkingBlock, BlockSearchLength) )
@@ -526,38 +577,83 @@ start:
         {
         case 1:
             printf("1. SearchString\n");
+            results.push_back({"SearchString", elapsed_time / number_of_searches});
             break;
         case 2:
             printf("2. bmsearch\n");
+            results.push_back({"bmsearch", elapsed_time / number_of_searches});
             break;
         case 3:
             printf("3. strsearch\n");
+            results.push_back({"strsearch", elapsed_time / number_of_searches});
             break;
         case 4:
             printf("4. bmh_search\n");
+            results.push_back({"bmh_search", elapsed_time / number_of_searches});
             break;
         case 5:
             printf("5. SearchBF\n");
+            results.push_back({"SearchBF", elapsed_time / number_of_searches});
             break;
         case 6:
             printf("6. SearchAUT\n");
+            results.push_back({"SearchAUT", elapsed_time / number_of_searches});
             break;
         case 7:
             printf("7. SearchBM\n");
+            results.push_back({"SearchBM", elapsed_time / number_of_searches});
             break;
         case 8:
-            printf("7. SearchGS\n");
+            printf("8. SearchKMP\n");
+            results.push_back({"SearchKMP", elapsed_time / number_of_searches});
+            break;
+        case 9:
+            printf("9. SearchHORSPOOL\n");
+            results.push_back({"SearchHORSPOOL", elapsed_time / number_of_searches});
+            break;
+        case 10:
+            printf("10. SearchGS\n");
+            results.push_back({"SearchGS", elapsed_time / number_of_searches});
+            break;
+        case 11:
+            printf("11. SearchQS\n");
+            results.push_back({"SearchQS", elapsed_time / number_of_searches});
+            break;
+        case 12:
+            printf("12. SearchStdStringView\n");
+            results.push_back({"SearchStdStringView", elapsed_time / number_of_searches});
             break;
         }
         printf("String found at position: %ld\n", (long)(result2 + result));
         printf("Number of searches: %d\n", number_of_searches);
         printf("Total elapsed time: %.2f ms\n", elapsed_time);
-        printf("Average elapsed time: %.6f ms\n\n", elapsed_time / number_of_searches);
+        printf("Average elapsed time: %.6f ms\n\n", elapsed_time / number_of_searches);    
         number_of_searches = 0;
         elapsed_time = 0.0;
         search_algo++;
-        if (search_algo <= 8)
-            goto start;    
+        if (search_algo <= 12)
+            goto start;
+            
+        // Print benchmark results //////////////
+        // Sort by time (ascending: fastest to slowest)
+        std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+            return a.duration_ms < b.duration_ms;
+        });
+
+        // Print the sorted leaderboard
+        std::cout << "--- String Search Performance Leaderboard ---\n";
+        int rank = 1;
+        for (const auto& r : results) {
+            // std::cout << std::setw(2) << std::setfill(' ') << rank++ << ". " // 01, 02, etc.
+            //         << std::left << std::setw(15) << r.name               // Left-align name in a 15-char column
+            //         << " - " 
+            //         << std::right << std::fixed << std::setprecision(6) << r.duration_ms << " ms\n";            // Right-align time
+            // Cut that chevron hell
+            // ALAS: Apple clang version 14.0.0 has no format yet
+            //std::cout << std::format("{:2}. {:<15} - {:.6f} ms\n", rank++, r.name, r.duration_ms);
+            printf("%02d. %-20s - %.6f ms\n", rank++, r.name.c_str(), r.duration_ms);
+        }
+        /////////////////////////////////////////
 
         return 0; // Exit code 0: Success
     } else {
@@ -586,14 +682,26 @@ start:
             printf("7. SearchBM\n");
             break;
         case 8:
-            printf("8. SearchGS\n");
+            printf("8. SearchKMP\n");
+            break;
+        case 9:
+            printf("9. SearchHORSPOOL\n");
+            break;
+        case 10:
+            printf("10. SearchGS\n");
+            break;
+        case 11:
+            printf("11. SearchQS\n");
+            break;
+        case 12:
+            printf("12. SearchStdStringView\n");
             break;
         }
         printf("String not found\n\n");
         number_of_searches = 0;
         elapsed_time = 0.0;
         search_algo++;
-        if (search_algo <= 8)
+        if (search_algo <= 12)
             goto start;
 
         //MessageBox(NULL,"String not found","QQQ!",MB_OK);
