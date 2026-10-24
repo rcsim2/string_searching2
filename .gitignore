@@ -1,8 +1,4 @@
 .DS_Store
 /search
 /search.dSYM/
-/.vscode/
-!/.vscode/
-/.vscode/*
-!/.vscode/launch.json
-!/.vscode/tasks.json
+
