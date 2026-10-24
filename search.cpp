@@ -419,7 +419,7 @@ start:
 
             switch (search_algo) {
                 case 1:
-                    search_result = SearchForString(WorkingBlock, WorkingLength, SearchString, SearchStringLength);
+                    search_result = SearchForString(WorkingBlock, BlockSearchLength, SearchString, SearchStringLength);
                     break;
                 case 2:
                     search_result = bmsearch((char*)WorkingBlock, WorkingLength, (char*)SearchString, SearchStringLength);
