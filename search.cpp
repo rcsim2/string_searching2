@@ -399,6 +399,9 @@ start:
                 case 7:
                     search_result = SearchBM((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
                     break;
+                case 8:
+                    search_result = Algorithm::SearchGS((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
+                    break;
             }
 
             // Michael Abrash's Blackbook
@@ -542,6 +545,9 @@ start:
         case 7:
             printf("7. SearchBM\n");
             break;
+        case 8:
+            printf("7. SearchGS\n");
+            break;
         }
         printf("String found at position: %ld\n", (long)(result2 + result));
         printf("Number of searches: %d\n", number_of_searches);
@@ -550,7 +556,7 @@ start:
         number_of_searches = 0;
         elapsed_time = 0.0;
         search_algo++;
-        if (search_algo <= 7)
+        if (search_algo <= 8)
             goto start;    
 
         return 0; // Exit code 0: Success
@@ -579,12 +585,15 @@ start:
         case 7:
             printf("7. SearchBM\n");
             break;
+        case 8:
+            printf("8. SearchGS\n");
+            break;
         }
         printf("String not found\n\n");
         number_of_searches = 0;
         elapsed_time = 0.0;
         search_algo++;
-        if (search_algo <= 7)
+        if (search_algo <= 8)
             goto start;
 
         //MessageBox(NULL,"String not found","QQQ!",MB_OK);
