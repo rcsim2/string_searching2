@@ -301,8 +301,9 @@ int SearchBF(char *x, int m, char *y, int n) {
     char *yb; 
     /* Searching */
     // ERROR:
-    //for (yb = y; *y != EOS; ++y)
-    for (yb = y; n > 0; ++y, --n)
+    //for (yb = y; *y != EOS; ++y)  // Trusting '\0' is dangerous (e.g. if a plain buffer is past)
+    //for (yb = y; n > 0; ++y, --n) // Better but we are still reading past the buffer
+    for (yb = y; n >= m; ++y, --n)  // OKOK: Do not read past the buffer y
         if (memcmp(x, y, m) == 0) {
             //OUTPUT(y - yb);
             // NEW: get position of search string in the buffer
