@@ -419,6 +419,7 @@ start:
 
             switch (search_algo) {
                 case 1:
+                    // NOTE: needs BlockSearchLength
                     search_result = SearchForString(WorkingBlock, BlockSearchLength, SearchString, SearchStringLength);
                     break;
                 case 2:
