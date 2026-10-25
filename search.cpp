@@ -24,6 +24,9 @@
 //-----------------------------------------------------------------------------
 // Performance: (finding last frame in a 868 frame file)
 //                                            2000 (P4)     2026 (M2)
+//
+// SearchStdStringView()                                    0.022 ms
+//
 // Michael Abrash's Blackbook
 // SearchForString() using memchr()/memcmp(): 4.8 ms        0.023 ms
 //
