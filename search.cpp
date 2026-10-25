@@ -25,7 +25,7 @@
 // Performance: (finding last frame in a 868 frame file)
 //                                            2000 (P4)     2026 (M2)
 //
-// SearchStdStringView()                                    0.022 ms
+// SearchStdStringView()                        ? ms        0.022 ms
 //
 // Michael Abrash's Blackbook
 // SearchForString() using memchr()/memcmp(): 4.8 ms        0.023 ms
@@ -41,7 +41,7 @@
 // Thierry Lecroq's Exact String Matching Algorithms
 // SearchBF:	                             30.2 ms        0.503 ms
 // SearchAUT:		                            ? ms        0.806 ms
-// SearchBM:		                          6.5 ms.       0.106 ms
+// SearchBM:		                          6.5 ms        0.106 ms
 // SearchTBM:		                          9.0 ms
 // SearchTUNEDBM:	                          5.5 ms
 // SearchKMP:	                             17.2 ms
