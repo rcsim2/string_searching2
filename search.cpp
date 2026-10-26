@@ -250,8 +250,8 @@ int main(int argc, char *argv[]) {
 
 
     /* Check for the proper number of arguments */
-    if ( argc != 3 ) {
-        printf("Usage: search filename search-string\n");
+    if (argc < 3 || argc > 5) {
+        printf("Usage: search filename search-string [-nmax-searches]\n");
         exit(1);
     }
 
@@ -328,9 +328,22 @@ int main(int argc, char *argv[]) {
     // will crash. It cannot handle all the output from the loop. It will crash
     // after a few iterations. The external console can handle it.
     int number_of_searches = 0;
+    int max_number_of_searches = 10000;
     double elapsed_time = 0.0;
     int search_algo = 1;
     std::vector<BenchmarkResult> results;
+
+
+    // TEST: check argv[3] and set max_number_of_searches
+    // Check if the optional 4th argument was provided
+    if (argc == 5 && strcmp(argv[3], "-n") == 0) {
+        max_number_of_searches = (int)strtol(argv[4], NULL, 10);
+    } 
+    else if (argc != 3) {
+        fprintf(stderr, "Usage: search filename search-string [-n value]\n");
+        exit(1);
+    }
+
     
 start:
     if (lseek(Handle, 0, SEEK_SET) == -1) {
@@ -574,7 +587,7 @@ start:
         elapsed_time += p1.elapsed() * 1000.0;
     //    printf("Number of searches: %d\n", number_of_searches);
     //    printf("Total elapsed time: %.2f ms\n\n", elapsed_time);
-        if (number_of_searches < 10'000)
+        if (number_of_searches < max_number_of_searches)
             goto start;
 
         switch (search_algo)
