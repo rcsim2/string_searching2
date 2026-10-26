@@ -334,12 +334,13 @@ int main(int argc, char *argv[]) {
     std::vector<BenchmarkResult> results;
 
 
-    // TEST: check argv[3] and set max_number_of_searches
-    // Check if the optional 4th argument was provided
-    if (argc == 5 && strcmp(argv[3], "-n") == 0) {
+    // TEST: check argv[3] and argv[4] and set max_number_of_searches
+    // Check if the optional -n flag was provided
+    if (argc == 3) {
+        // Valid: uses the default value
+    } else if (argc == 5 && strcmp(argv[3], "-n") == 0) {
         max_number_of_searches = (int)strtol(argv[4], NULL, 10);
-    } 
-    else if (argc != 3) {
+    } else {
         fprintf(stderr, "Usage: search filename search-string [-n value]\n");
         exit(1);
     }
