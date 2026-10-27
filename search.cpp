@@ -268,23 +268,24 @@ int main(int argc, char *argv[]) {
     //SearchString = (unsigned char*)pszStr;
     SearchStringLength = strlen((const char*)SearchString);
 
-    /* Try to get memory in which to buffer the data */
-    // NOTE NOTE NOTE: 
-    // Avoid memory leaks: malloc() must have a corresponding free()!!! 
-    if ( (WorkingBlock = (unsigned char*)malloc(BLOCK_SIZE)) == NULL ) {
-        printf("Can't get enough memory\n");
-        exit(1);
-        //return -2;
-    }
-
-    /* Load the first block at the start of the buffer, and try to fill
-        the entire buffer */
-    NextLoadPtr = WorkingBlock;
-    NextLoadCount = BLOCK_SIZE;
-
-    Done = 0;      /* not done with search yet */
-    Found = 0;     /* assume we won't find a match */
-
+    // NOTE: We now do this below at start: ///////////////
+    // /* Try to get memory in which to buffer the data */
+    // // NOTE NOTE NOTE: 
+    // // Avoid memory leaks: malloc() must have a corresponding free()!!! 
+    // if ( (WorkingBlock = (unsigned char*)malloc(BLOCK_SIZE)) == NULL ) {
+    //     printf("Can't get enough memory\n");
+    //     exit(1);
+    //     //return -2;
+    // }
+    //
+    // /* Load the first block at the start of the buffer, and try to fill
+    //     the entire buffer */
+    // NextLoadPtr = WorkingBlock;
+    // NextLoadCount = BLOCK_SIZE;
+    //
+    // Done = 0;      /* not done with search yet */
+    // Found = 0;     /* assume we won't find a match */
+    ///////////////////////////////////////////////////////
 
    
     // NOTE: No, let's not do this. We want to allow searching for multiple
@@ -594,15 +595,17 @@ start:
                 Done = 1;
                 // NOTE NOTE NOTE:
                 // No memory leaks!!!
-                free( WorkingBlock );
+                // NOTE: Not here: must do it after the do-while loop.
+                // We must also free when nothing is found.
+                //free( WorkingBlock );
             } else {
                 /* Copy any bytes from the end of the block that start
                 potentially-matching sequences that would run off the
                 end of the block over to the next block */
                 if ( SearchStringLength > 1 ) {
-                memcpy(WorkingBlock,
-                    WorkingBlock + BLOCK_SIZE - SearchStringLength + 1,
-                    SearchStringLength - 1);
+                    memcpy(WorkingBlock,
+                        WorkingBlock + BLOCK_SIZE - SearchStringLength + 1,
+                        SearchStringLength - 1);
                 }	
 
 			
@@ -623,6 +626,9 @@ start:
             }
         }
     } while ( !Done );
+
+    // NOTE: no memory leaks
+    free(WorkingBlock);
 
     /* Report the results */
     if ( Found ) {
