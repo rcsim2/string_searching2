@@ -11,6 +11,7 @@
         "${workspaceFolder}/search.cpp",
         "${workspaceFolder}/graph.cpp",
         "${workspaceFolder}/fsif.cpp",
+        "${workspaceFolder}/parse.cpp",
         "-o",
         "${workspaceFolder}/search"
       ],

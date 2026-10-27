@@ -123,6 +123,7 @@ long result = 0;
 #include "fsif.h"
 #include "graph.h"
 #include "algorithm.h"
+#include "parse.h"
 
 
 
@@ -250,8 +251,8 @@ int main(int argc, char *argv[]) {
 
 
     /* Check for the proper number of arguments */
-    if (argc < 3 || argc > 5) {
-        printf("Usage: search filename search-string [-nmax-searches]\n");
+    if (argc < 3) {
+        printf("Usage: search filename search-string\n");
         exit(1);
     }
 
@@ -334,16 +335,49 @@ int main(int argc, char *argv[]) {
     std::vector<BenchmarkResult> results;
 
 
-    // TEST: check argv[3] and argv[4] and set max_number_of_searches
-    // Check if the optional -n flag was provided
-    if (argc == 3) {
-        // Valid: uses the default value
-    } else if (argc == 5 && strcmp(argv[3], "-n") == 0) {
-        max_number_of_searches = (int)strtol(argv[4], NULL, 10);
-    } else {
-        fprintf(stderr, "Usage: search filename search-string [-n value]\n");
-        exit(1);
+    // TEST: 
+    char *algorithms = NULL; // Default or null if not specified
+
+    // 2. Loop through remaining arguments starting at index 3
+    for (int i = 3; i < argc; i++) {
+        if (strcmp(argv[i], "-n") == 0) {
+            if (i + 1 < argc) { // Make sure a value exists after '-n'
+                max_number_of_searches = (int)strtol(argv[i + 1], NULL, 10);
+                i++; // Skip the value in the next iteration
+            } else {
+                fprintf(stderr, "Error: Option '-n' requires a value.\n");
+                exit(1);
+            }
+        } 
+        else if (strcmp(argv[i], "-a") == 0) {
+            if (i + 1 < argc) { // Make sure a value exists after '-a'
+                algorithms = argv[i + 1];
+                i++; // Skip the value in the next iteration
+            } else {
+                fprintf(stderr, "Error: Option '-a' requires a value.\n");
+                exit(1);
+            }
+        } 
+        else {
+            fprintf(stderr, "Error: Unknown option '%s'\n", argv[i]);
+            fprintf(stderr, "Usage: %s filename search-string [-n value] [-a algorithms]\n", argv[0]);
+            exit(1);
+        }
     }
+    
+    int *algos = NULL;
+    int count = 0;
+
+    //if (algorithms != NULL) {
+        algos = parse_algorithms("3-5,10,12", &count);
+        if (algos == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            return 1;
+        } else {
+            search_algo = algos[0];
+        }
+    //}
+    ///////////////////////////////////
 
     
 start:
@@ -648,9 +682,16 @@ start:
         printf("Average elapsed time: %.6f ms\n\n", elapsed_time / number_of_searches);    
         number_of_searches = 0;
         elapsed_time = 0.0;
-        search_algo++;
-        if (search_algo <= 12)
+        //search_algo++;
+        // NOTE: we have already set search_algo to algos[0] above.
+        // Now do the other algos
+        static int i = 1;
+        if (i < count) {
+            search_algo = algos[i];
+            i++;
+            //if (search_algo <= 12)
             goto start;
+        }
             
         // Print benchmark results //////////////
         // Sort by time (ascending: fastest to slowest)
