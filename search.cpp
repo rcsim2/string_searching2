@@ -335,10 +335,10 @@ int main(int argc, char *argv[]) {
     std::vector<BenchmarkResult> results;
 
 
-    // TEST: 
+    // TEST: use algorithms to define what algos to run
     char *algorithms = NULL; // Default or null if not specified
 
-    // 2. Loop through remaining arguments starting at index 3
+    // Loop through remaining arguments starting at index 3
     for (int i = 3; i < argc; i++) {
         if (strcmp(argv[i], "-n") == 0) {
             if (i + 1 < argc) { // Make sure a value exists after '-n'
@@ -368,15 +368,18 @@ int main(int argc, char *argv[]) {
     int *algos = NULL;
     int count = 0;
 
-    //if (algorithms != NULL) {
-        algos = parse_algorithms("3-5,10,12", &count);
-        if (algos == NULL) {
-            fprintf(stderr, "Memory allocation failed\n");
-            return 1;
-        } else {
-            search_algo = algos[0];
-        }
-    //}
+    if (algorithms != NULL) {
+        algos = parse_algorithms(algorithms, &count);
+    } else {
+        algos = parse_algorithms("1-12", &count); // default
+    }
+
+    if (algos == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    } else {
+        search_algo = algos[0]; // set to the first algo
+    }
     ///////////////////////////////////
 
     
