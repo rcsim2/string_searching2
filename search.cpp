@@ -763,9 +763,16 @@ start:
         printf("String not found\n\n");
         number_of_searches = 0;
         elapsed_time = 0.0;
-        search_algo++;
-        if (search_algo <= 12)
+        //search_algo++;
+        // NOTE: we have already set search_algo to algos[0] above.
+        // Now do the other algos
+        static int i = 1;
+        if (i < count) {
+            search_algo = algos[i];
+            i++;
+            //if (search_algo <= 12)
             goto start;
+        }
 
         //MessageBox(NULL,"String not found","QQQ!",MB_OK);
         //return -1;
