@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
     std::vector<BenchmarkResult> results;
 
 
-    // TEST: use algorithms to define what algos to run
+    // TEST: use algorithms string to define what algos to run
     char *algorithms = NULL; // Default or null if not specified
 
     // Loop through remaining arguments starting at index 3
@@ -365,13 +365,14 @@ int main(int argc, char *argv[]) {
         }
     }
     
+    // Parse algorithms string
     int *algos = NULL;
     int count = 0;
 
     if (algorithms != NULL) {
         algos = parse_algorithms(algorithms, &count);
     } else {
-        algos = parse_algorithms("1-12", &count); // default
+        algos = parse_algorithms("1-12", &count); // default if -a not provided
     }
 
     if (algos == NULL) {
