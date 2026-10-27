@@ -96,4 +96,5 @@ std::vector<int> parse_algorithms(const std::string& str) {
     }
 
     return result;
+}
 */
