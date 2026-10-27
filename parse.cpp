@@ -55,3 +55,45 @@ int* parse_algorithms(const char *str, int *count) {
     free(dup);
     return arr;
 }
+
+
+/*
+// C++ Alternative:
+#include <iostream>
+#include <vector>
+#include <string>
+#include <sstream>
+
+// Parses strings like "1-4,10,12" into a std::vector<int>
+std::vector<int> parse_algorithms(const std::string& str) {
+    std::vector<int> result;
+    std::stringstream ss(str);
+    std::string token;
+
+    // Split by comma ','
+    while (std::getline(ss, token, ',')) {
+        size_t hyphen_pos = token.find('-');
+        
+        if (hyphen_pos != std::string::npos) {
+            // It's a range (e.g., "1-4")
+            std::string start_str = token.substr(0, hyphen_pos);
+            std::string end_str = token.substr(hyphen_pos + 1);
+
+            int start = std::stoi(start_str);
+            int end = std::stoi(end_str);
+
+            if (start <= end) {
+                for (int v = start; v <= end; ++v) {
+                    result.push_back(v);
+                }
+            }
+        } else {
+            // It's a single number (e.g., "10")
+            if (!token.empty()) {
+                result.push_back(std::stoi(token));
+            }
+        }
+    }
+
+    return result;
+*/
