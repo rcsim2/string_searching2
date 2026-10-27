@@ -368,12 +368,24 @@ int main(int argc, char *argv[]) {
     // Parse algorithms string
     int *algos = NULL;
     int count = 0;
+    int index = 0;
 
     if (algorithms != NULL) {
         algos = parse_algorithms(algorithms, &count);
     } else {
         algos = parse_algorithms("1-12", &count); // default if -a not provided
     }
+
+    // CHECK:
+    printf("Algos to run: ");
+    for (int i=0;i<count;i++) {
+        printf("%d ", algos[i]);
+        if (algos[i] < 1 || algos[i] > 12) {
+            printf("\nUse only numbers 1-12\n");
+            return 1;
+        }
+    }
+    printf("\n\n");
 
     if (algos == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -679,6 +691,9 @@ start:
             printf("12. SearchStdStringView\n");
             results.push_back({"SearchStdStringView", elapsed_time / number_of_searches});
             break;
+        default:
+            printf("Search algorithm %d not implemented.\n", search_algo);
+            break;
         }
         printf("String found at position: %ld\n", (long)(result2 + result));
         printf("Number of searches: %d\n", number_of_searches);
@@ -689,10 +704,10 @@ start:
         //search_algo++;
         // NOTE: we have already set search_algo to algos[0] above.
         // Now do the other algos
-        static int i = 1;
-        if (i < count) {
-            search_algo = algos[i];
-            i++;
+        //static int i = 1;
+        index++;
+        if (index < count) {
+            search_algo = algos[index];
             //if (search_algo <= 12)
             goto start;
         }
@@ -759,6 +774,9 @@ start:
         case 12:
             printf("12. SearchStdStringView\n");
             break;
+        default:
+            printf("Search algorithm %d not implemented.\n", search_algo);
+            break;
         }
         printf("String not found\n\n");
         number_of_searches = 0;
@@ -766,10 +784,10 @@ start:
         //search_algo++;
         // NOTE: we have already set search_algo to algos[0] above.
         // Now do the other algos
-        static int i = 1;
-        if (i < count) {
-            search_algo = algos[i];
-            i++;
+        //static int i = 1;
+        index++;
+        if (index < count) {
+            search_algo = algos[index];
             //if (search_algo <= 12)
             goto start;
         }
