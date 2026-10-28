@@ -1049,5 +1049,68 @@ namespace Algorithm
 
 
 
+// Textbook KMP Search (From: Gemini) //////////////////////////
+// See: https://www.youtube.com/watch?v=q4_90fOoS-s
+// Build standard LPS table
+void computeLPSArray(const char *pattern, int M, int *lps) {
+    int len = 0;
+    lps[0] = 0;
+    int i = 1;
+
+    while (i < M) {
+        if (pattern[i] == pattern[len]) {
+            len++;
+            lps[i] = len;
+            i++;
+        } else {
+            if (len != 0) {
+                len = lps[len - 1];
+            } else {
+                lps[i] = 0;
+                i++;
+            }
+        }
+    }
+}
+
+int SearchKMP_Textbook(const char *pattern, int M, const char *text, int N) {
+    if (M == 0) return 0;
+
+    int *lps = (int *)malloc(M * sizeof(int));
+    if (!lps) return -1;
+
+    computeLPSArray(pattern, M, lps);
+
+    int i = 0; // index for text
+    int j = 0; // index for pattern
+    int matches = 0;
+
+    while (i < N) {
+        if (pattern[j] == text[i]) {
+            i++;
+            j++;
+        }
+
+        if (j == M) {
+            // Match found at index (i - j)
+            // NEW: get position of search string in the buffer
+            result = i - j;
+            return 1; // match
+            //matches++;
+            //j = lps[j - 1]; // Continue searching
+        } else if (i < N && pattern[j] != text[i]) {
+            if (j != 0) {
+                j = lps[j - 1];
+            } else {
+                i++;
+            }
+        }
+    }
+
+    free(lps);
+    return matches;
+}
+////////////////////////////////////////////////////////////////
+
 
 #endif // __ALGORITHM_H

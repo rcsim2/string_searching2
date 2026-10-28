@@ -374,15 +374,15 @@ int main(int argc, char *argv[]) {
     if (algorithms != NULL) {
         algos = parse_algorithms(algorithms, &count);
     } else {
-        algos = parse_algorithms("1-12", &count); // default if -a not provided
+        algos = parse_algorithms("1-13", &count); // default if -a not provided
     }
 
     // CHECK:
     printf("Algos to run: ");
     for (int i=0;i<count;i++) {
         printf("%d ", algos[i]);
-        if (algos[i] < 1 || algos[i] > 12) {
-            printf("\nUse only numbers 1-12\n");
+        if (algos[i] < 1 || algos[i] > 13) {
+            printf("\nUse only numbers 1-13\n");
             return 1;
         }
     }
@@ -522,6 +522,9 @@ start:
                     break;
                 case 12:
                     search_result = SearchStdStringView(WorkingBlock, WorkingLength, SearchString, SearchStringLength);
+                    break;
+                case 13:
+                    search_result = SearchKMP_Textbook((char*)SearchString, SearchStringLength, (char*)WorkingBlock, WorkingLength);
                     break;
             }
 
@@ -697,6 +700,10 @@ start:
             printf("12. SearchStdStringView\n");
             results.push_back({"SearchStdStringView", elapsed_time / number_of_searches});
             break;
+        case 13:
+            printf("13. SearchKMP_Textbook\n");
+            results.push_back({"SearchKMP_Textbook", elapsed_time / number_of_searches});
+            break;
         default:
             printf("Search algorithm %d not implemented.\n", search_algo);
             break;
@@ -779,6 +786,9 @@ start:
             break;
         case 12:
             printf("12. SearchStdStringView\n");
+            break;
+        case 13:
+            printf("13. SearchKMP_Textbook\n");
             break;
         default:
             printf("Search algorithm %d not implemented.\n", search_algo);
