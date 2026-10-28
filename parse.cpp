@@ -58,7 +58,7 @@ int* parse_algorithms(const char *str, int *count) {
 
 
 /*
-// C++ Alternative:
+// Much cleaner C++ Alternative:
 #include <iostream>
 #include <vector>
 #include <string>
