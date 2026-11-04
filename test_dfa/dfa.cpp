@@ -1,3 +1,5 @@
+// See: https://www.youtube.com/watch?v=5KJtYMjeY4U
+// And: https://github.com/ComputerBread/algorithms/blob/3dc56d77ab070957ae985931be65aede9c05f04f/DFA-string-matching/dfa.js
 #include <iostream>
 #include <vector>
 #include <string>
