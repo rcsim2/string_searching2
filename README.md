@@ -94,6 +94,7 @@ portable performance guarantees.
   implementations.
 - `fsif.cpp` / `fsif.h`: 512-byte overlapping-block file search adapted from
   Bob Stout's Code Snippets.
+- `graph.cpp` / `graph.h`: graph and automaton/trie data structures used to support string-search algorithms.
 - `parse.cpp` / `parse.h`: parser for algorithm ranges and lists such as `1-13`
   and `1,4,10-12`.
 - `frames.txt`: sample binary/text fixture containing frame markers.
