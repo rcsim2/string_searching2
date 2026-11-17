@@ -222,6 +222,8 @@ Average elapsed time: 0.449605 ms
 rg@MacBook Air M1 string_searching2 % 
 ```
 
+![String Search Benchmark](./web2/string_search_benchmark.png)
+
 ## Names
 
 * **[Robert S. Boyer](https://en.wikipedia.org/wiki/Robert_S._Boyer) (b. 1946):** American computer scientist and UT Austin professor emeritus known for automated theorem proving. Co-invented the **Boyer–Moore string-search algorithm** in **1977**, introducing right-to-left matching to skip large blocks of text.

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>String Search Benchmark — Horizontal Bar Chart</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-subtle: #e2e8f0;
+      --grid-line: #e2e8f0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+    }
+
+    .font-mono-tabular {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-fill {
+      transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease, filter 0.2s ease;
+    }
+
+    .bar-row {
+      transition: transform 0.25s ease, opacity 0.2s ease;
+    }
+
+    .bar-row:hover .bar-fill {
+      filter: brightness(1.06);
+    }
+
+    /* Subtle vertical gridlines behind bars */
+    .chart-grid {
+      background-image: repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent calc(20% - 1px),
+        var(--grid-line) calc(20% - 1px),
+        var(--grid-line) 20%
+      );
+    }
+  </style>
+</head>
+<body class="min-h-screen py-6 px-3 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto">
+    <!-- Main Card -->
+    <section class="bg-white border border-slate-200/90 rounded-2xl shadow-sm overflow-hidden">
+      <!-- Header -->
+      <div class="px-5 py-5 sm:px-7 sm:py-6 border-b border-slate-200/80 bg-gradient-to-r from-slate-50 via-white to-sky-50/40">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200/70 mb-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+              Execution Time Comparison (Lower is Faster)
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+              String Search Benchmark
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">
+              Comparison of 13 string search algorithms measured in milliseconds (ms)
+            </p>
+          </div>
+
+          <!-- Controls -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button
+              id="toggleSortBtn"
+              type="button"
+              class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.99] transition shadow-xs cursor-pointer"
+              aria-label="Toggle sort order between fastest at top and slowest at top"
+            >
+              <svg id="sortIcon" class="w-4 h-4 text-sky-300 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+              </svg>
+              <span id="sortBtnLabel">Order: Fastest at Top</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Category Legend & Interactive Filter -->
+        <div class="mt-5 pt-4 border-t border-slate-200/70 flex flex-wrap items-center justify-between gap-3">
+          <div id="legendContainer" class="flex flex-wrap items-center gap-2" role="group" aria-label="Algorithm categories">
+            <!-- Populated dynamically -->
+          </div>
+          <div class="text-xs text-slate-500">
+            Hover or tap any bar for rank &amp; speedup details
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart Body -->
+      <div class="p-4 sm:p-6 lg:p-7 relative">
+        <!-- Top X-Axis Scale Header -->
+        <div class="flex items-end mb-2 pl-[135px] sm:pl-[195px] md:pl-[225px] pr-[115px] sm:pr-[145px]">
+          <div id="xAxisTicks" class="w-full grid grid-cols-5 text-[11px] sm:text-xs font-mono-tabular text-slate-400 select-none">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Rows Container -->
+        <div id="chartRows" class="space-y-2.5 sm:space-y-3" role="list" aria-label="Algorithm benchmark horizontal bars">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Bottom X-Axis Scale Footer -->
+        <div class="flex items-start mt-3 pt-2 border-t border-slate-100 pl-[135px] sm:pl-[195px] md:pl-[225px] pr-[115px] sm:pr-[145px]">
+          <div id="xAxisBottomTicks" class="w-full grid grid-cols-5 text-[11px] sm:text-xs font-mono-tabular text-slate-400 select-none">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Summary Strip -->
+        <div class="mt-6 pt-4 border-t border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm">
+          <div class="rounded-xl bg-sky-50/70 border border-sky-200/60 px-3.5 py-2.5 flex items-center justify-between">
+            <span class="text-slate-600">Fastest</span>
+            <span class="font-mono-tabular font-semibold text-sky-800">SearchStdStringView (0.023674 ms)</span>
+          </div>
+          <div class="rounded-xl bg-rose-50/60 border border-rose-200/60 px-3.5 py-2.5 flex items-center justify-between">
+            <span class="text-slate-600">Slowest</span>
+            <span class="font-mono-tabular font-semibold text-rose-800">SearchAUT (0.802155 ms)</span>
+          </div>
+          <div class="rounded-xl bg-indigo-50/60 border border-indigo-200/60 px-3.5 py-2.5 flex items-center justify-between">
+            <span class="text-slate-600">Top Speedup</span>
+            <span id="topSpeedupStat" class="font-mono-tabular font-semibold text-indigo-800">33.88x faster</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Floating Tooltip -->
+  <div
+    id="tooltip"
+    class="pointer-events-none fixed z-50 hidden opacity-0 transition-opacity duration-150 bg-slate-900/95 text-white rounded-xl shadow-xl border border-slate-700/80 px-3.5 py-2.5 text-xs max-w-xs backdrop-blur-xs"
+    role="tooltip"
+  >
+    <div class="flex items-center justify-between gap-3 mb-1">
+      <span id="ttRank" class="px-1.5 py-0.5 rounded bg-slate-800 text-sky-300 font-mono-tabular font-semibold text-[11px]">#1</span>
+      <span id="ttCategory" class="text-[11px] font-medium text-slate-300">Category</span>
+    </div>
+    <div id="ttName" class="font-mono-tabular font-semibold text-sm text-white truncate">Algorithm</div>
+    <div class="mt-1.5 pt-1.5 border-t border-slate-700/70 flex items-center justify-between gap-4">
+      <span class="text-slate-400">Time:</span>
+      <span id="ttTime" class="font-mono-tabular font-semibold text-emerald-300">0.000000 ms</span>
+    </div>
+    <div class="mt-0.5 flex items-center justify-between gap-4">
+      <span class="text-slate-400">vs. Slowest:</span>
+      <span id="ttSpeedup" class="font-mono-tabular font-semibold text-amber-300">1.00x</span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Categories with harmonious color palettes
+      const CATEGORIES = {
+        stdlib: {
+          key: 'stdlib',
+          label: 'Stdlib & C-String',
+          swatch: '#0284c7',
+          gradient: 'linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%)',
+          badgeBg: 'bg-sky-50 text-sky-800 border-sky-200',
+          dot: '#0284c7'
+        },
+        boyerMoore: {
+          key: 'boyerMoore',
+          label: 'Boyer–Moore / Sublinear',
+          swatch: '#6366f1',
+          gradient: 'linear-gradient(90deg, #818cf8 0%, #4f46e5 100%)',
+          badgeBg: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+          dot: '#6366f1'
+        },
+        linearAuto: {
+          key: 'linearAuto',
+          label: 'KMP / Brute-Force / Automata',
+          swatch: '#e11d48',
+          gradient: 'linear-gradient(90deg, #fb7185 0%, #e11d48 100%)',
+          badgeBg: 'bg-rose-50 text-rose-800 border-rose-200',
+          dot: '#e11d48'
+        }
+      };
+
+      // Exact benchmark dataset in fastest-to-slowest order
+      const RAW_DATA = [
+        { rank: 1,  name: 'SearchStdStringView', timeMs: 0.023674, category: 'stdlib' },
+        { rank: 2,  name: 'SearchForString',     timeMs: 0.025014, category: 'stdlib' },
+        { rank: 3,  name: 'strsearch',           timeMs: 0.052321, category: 'stdlib' },
+        { rank: 4,  name: 'SearchQS',            timeMs: 0.064051, category: 'boyerMoore' },
+        { rank: 5,  name: 'bmh_search',          timeMs: 0.075316, category: 'boyerMoore' },
+        { rank: 6,  name: 'SearchHORSPOOL',      timeMs: 0.086004, category: 'boyerMoore' },
+        { rank: 7,  name: 'SearchBM',            timeMs: 0.104043, category: 'boyerMoore' },
+        { rank: 8,  name: 'bmsearch',            timeMs: 0.111470, category: 'boyerMoore' },
+        { rank: 9,  name: 'SearchKMP_Textbook',  timeMs: 0.449605, category: 'linearAuto' },
+        { rank: 10, name: 'SearchBF',            timeMs: 0.486483, category: 'linearAuto' },
+        { rank: 11, name: 'SearchKMP',           timeMs: 0.601408, category: 'linearAuto' },
+        { rank: 12, name: 'SearchGS',            timeMs: 0.601995, category: 'linearAuto' },
+        { rank: 13, name: 'SearchAUT',           timeMs: 0.802155, category: 'linearAuto' }
+      ];
+
+      const slowestTime = Math.max(...RAW_DATA.map(d => d.timeMs));
+      const maxAxisTime = 0.9; // Clean 5-step scale: 0.00, 0.225, 0.45, 0.675, 0.90 ms (or 0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+
+      let fastestFirst = true;
+      let activeCategory = 'all';
+
+      const chartRowsEl = document.getElementById('chartRows');
+      const legendContainerEl = document.getElementById('legendContainer');
+      const toggleSortBtn = document.getElementById('toggleSortBtn');
+      const sortBtnLabel = document.getElementById('sortBtnLabel');
+      const sortIcon = document.getElementById('sortIcon');
+      const tooltipEl = document.getElementById('tooltip');
+
+      // Render X-Axis ticks (0.00 ms to 0.90 ms)
+      function renderAxisTicks() {
+        const steps = [0, 0.225, 0.45, 0.675, 0.9];
+        const html = steps
+          .map((v, idx) => {
+            const align = idx === 0 ? 'text-left' : idx === steps.length - 1 ? 'text-right' : 'text-center';
+            return `<span class="${align}">${v.toFixed(2)} ms</span>`;
+          })
+          .join('');
+        document.getElementById('xAxisTicks').innerHTML = html;
+        document.getElementById('xAxisBottomTicks').innerHTML = html;
+      }
+
+      // Render interactive category legend
+      function renderLegend() {
+        const allBtn = `
+          <button
+            type="button"
+            data-cat="all"
+            class="legend-btn inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer ${
+              activeCategory === 'all'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }"
+          >
+            <span>All (13)</span>
+          </button>
+        `;
+
+        const catButtons = Object.values(CATEGORIES).map(cat => {
+          const count = RAW_DATA.filter(d => d.category === cat.key).length;
+          const isSelected = activeCategory === cat.key;
+          return `
+            <button
+              type="button"
+              data-cat="${cat.key}"
+              class="legend-btn inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer ${
+                isSelected
+                  ? `${cat.badgeBg} ring-1 ring-offset-1 ring-slate-300 font-semibold`
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }"
+            >
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${cat.dot}"></span>
+              <span>${cat.label} (${count})</span>
+            </button>
+          `;
+        }).join('');
+
+        legendContainerEl.innerHTML = allBtn + catButtons;
+
+        legendContainerEl.querySelectorAll('.legend-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const clicked = btn.getAttribute('data-cat');
+            activeCategory = activeCategory === clicked ? 'all' : clicked;
+            renderLegend();
+            renderChart();
+          });
+        });
+      }
+
+      // Position and show tooltip
+      function showTooltip(item, event) {
+        const cat = CATEGORIES[item.category];
+        const speedup = slowestTime / item.timeMs;
+        const speedupStr = item.rank === RAW_DATA.length
+          ? '1.00x (baseline)'
+          : `${speedup.toFixed(2)}x faster`;
+
+        document.getElementById('ttRank').textContent = `#${item.rank}`;
+        document.getElementById('ttCategory').textContent = cat.label;
+        document.getElementById('ttName').textContent = item.name;
+        document.getElementById('ttTime').textContent = `${item.timeMs.toFixed(6)} ms`;
+        document.getElementById('ttSpeedup').textContent = speedupStr;
+
+        tooltipEl.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          tooltipEl.classList.remove('opacity-0');
+          positionTooltip(event);
+        });
+      }
+
+      function positionTooltip(event) {
+        if (!event || tooltipEl.classList.contains('hidden')) return;
+        const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+        const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+        const pad = 14;
+        const rect = tooltipEl.getBoundingClientRect();
+
+        let left = clientX + pad;
+        let top = clientY + pad;
+
+        if (left + rect.width > window.innerWidth - 10) {
+          left = clientX - rect.width - pad;
+        }
+        if (top + rect.height > window.innerHeight - 10) {
+          top = clientY - rect.height - pad;
+        }
+        tooltipEl.style.left = `${Math.max(8, left)}px`;
+        tooltipEl.style.top = `${Math.max(8, top)}px`;
+      }
+
+      function hideTooltip() {
+        tooltipEl.classList.add('opacity-0');
+        setTimeout(() => {
+          if (tooltipEl.classList.contains('opacity-0')) {
+            tooltipEl.classList.add('hidden');
+          }
+        }, 150);
+      }
+
+      // Render horizontal bars
+      function renderChart() {
+        const ordered = fastestFirst ? [...RAW_DATA] : [...RAW_DATA].reverse();
+
+        chartRowsEl.innerHTML = ordered.map(item => {
+          const cat = CATEGORIES[item.category];
+          const widthPct = Math.min(100, Math.max(2.5, (item.timeMs / maxAxisTime) * 100));
+          const speedup = slowestTime / item.timeMs;
+          const isDimmed = activeCategory !== 'all' && activeCategory !== item.category;
+
+          return `
+            <div
+              role="listitem"
+              data-rank="${item.rank}"
+              class="bar-row group flex items-center gap-2 sm:gap-3 py-1 rounded-xl ${
+                isDimmed ? 'opacity-30' : 'opacity-100'
+              }"
+            >
+              <!-- Left Y-Axis Label: Rank + Algorithm Name -->
+              <div class="w-[125px] sm:w-[185px] md:w-[215px] shrink-0 flex items-center justify-between gap-2 pr-1">
+                <span class="font-mono-tabular text-[11px] text-slate-400 w-5 text-right shrink-0">#${item.rank}</span>
+                <span
+                  class="font-mono-tabular text-xs sm:text-[13px] font-medium text-slate-800 truncate text-right flex-1"
+                  title="${item.name}"
+                >
+                  ${item.name}
+                </span>
+              </div>
+
+              <!-- Track + Horizontal Colored Bar -->
+              <div class="flex-1 h-7 sm:h-8 rounded-lg bg-slate-100/90 chart-grid relative overflow-visible flex items-center">
+                <div
+                  class="bar-fill h-full rounded-lg shadow-2xs flex items-center justify-end pr-2 cursor-pointer"
+                  style="width: ${widthPct.toFixed(3)}%; background: ${cat.gradient};"
+                  data-rank="${item.rank}"
+                >
+                  ${
+                    widthPct > 36
+                      ? `<span class="hidden md:inline font-mono-tabular text-[11px] font-medium text-white/95 drop-shadow-2xs">${speedup.toFixed(1)}x</span>`
+                      : ''
+                  }
+                </div>
+              </div>
+
+              <!-- Right Exact Value Label (ms) -->
+              <div class="w-[105px] sm:w-[135px] shrink-0 text-right pl-1">
+                <span class="font-mono-tabular text-xs sm:text-[13px] font-semibold text-slate-700 group-hover:text-slate-950">
+                  ${item.timeMs.toFixed(6)} <span class="text-[11px] font-normal text-slate-400">ms</span>
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Attach hover & touch interactions
+        chartRowsEl.querySelectorAll('.bar-row').forEach(row => {
+          const rank = Number(row.getAttribute('data-rank'));
+          const item = RAW_DATA.find(d => d.rank === rank);
+          if (!item) return;
+
+          row.addEventListener('mouseenter', e => showTooltip(item, e));
+          row.addEventListener('mousemove', e => positionTooltip(e));
+          row.addEventListener('mouseleave', hideTooltip);
+          row.addEventListener('touchstart', e => {
+            showTooltip(item, e);
+          }, { passive: true });
+          row.addEventListener('touchmove', e => {
+            positionTooltip(e);
+          }, { passive: true });
+          row.addEventListener('touchend', () => {
+            setTimeout(hideTooltip, 1200);
+          }, { passive: true });
+        });
+      }
+
+      // Toggle Sort Order Button
+      toggleSortBtn.addEventListener('click', () => {
+        fastestFirst = !fastestFirst;
+        sortBtnLabel.textContent = fastestFirst ? 'Order: Fastest at Top' : 'Order: Slowest at Top';
+        sortIcon.style.transform = fastestFirst ? 'rotate(0deg)' : 'rotate(180deg)';
+        renderChart();
+      });
+
+      // Initialize
+      const topSpeedup = (slowestTime / RAW_DATA[0].timeMs).toFixed(2);
+      document.getElementById('topSpeedupStat').textContent = `${topSpeedup}x faster`;
+      renderAxisTicks();
+      renderLegend();
+      renderChart();
+    })();
+  </script>
+</body>
+</html>
