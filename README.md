@@ -1,34 +1,121 @@
 # string_searching2
 
-A command-line program that searches a file for the first occurrence of a
-case-sensitive string and reports its byte offset.
+`string_searching2` is a C++17 command-line benchmark and correctness check for
+case-sensitive string searching in files. It is rooted in the original R/C Sim
+Sikorsky flight-recorder code and compares implementations from classical
+algorithms and C++ library code.
+
+The program can:
+
+- open a binary file and search for an exact, case-sensitive byte sequence;
+- find the first occurrence and report its zero-based byte offset;
+- search file data in 16 KiB (`0x4000`) restartable blocks so large files do not
+  need to be loaded into memory all at once;
+- run one or more implementations repeatedly for performance measurements;
+- use a file search plus `memchr()`/`memcmp()` implementation as the primary
+  fast path and compare it with several Boyer-Moore, Horspool, KMP, brute-force,
+  DFA, and Quick Search variants;
+- print an average-time leaderboard from fastest to slowest.
 
 ## Build
 
-With a C++17 compiler:
+Use a C++17 compiler. On macOS, for example:
 
 ```sh
-clang++ -std=c++17 search.cpp -o search
+clang++ -std=c++17 search.cpp fsif.cpp graph.cpp parse.cpp -o search
 ```
+
+The repository already contains a compiled `search` executable for convenience,
+but building from source is recommended.
 
 ## Usage
 
 ```sh
-./search <filename> <search-string>
+./search <filename> <search-string> [-n <search-count>] [-a <algorithm-list>]
 ```
 
-For example, search the included sample data for its first frame header:
+Arguments:
+
+- `filename`: file to search. The search is binary-safe and does not treat text
+  specially.
+- `search-string`: exact, case-sensitive sequence to find. Quote strings or
+  patterns containing spaces or shell metacharacters.
+- `-n <search-count>`: number of times to repeat each selected search.
+  The default is `10000`.
+- `-a <algorithm-list>`: algorithms to run, as individual numbers or comma-separated
+  ranges. The default is `1-13`.
+
+Examples:
 
 ```sh
-./search frames.txt "[Frame 1]"
+# Search the included sample file once for each algorithm, using the default count
+./search frames.txt "[Frame 868]"
+
+# Run algorithms 1 through 13 ten thousand times
+./search frames.txt "[Frame 868]" -n 10000 -a 1-13
+
+# Run only the Abrash implementation and std::string_view implementation
+./search frames.txt "[Frame 868]" -n 1000 -a 1,12
 ```
 
-On success, the program prints the byte position and elapsed search time. If
-the string is not found, it prints `String not found` and exits with status 1.
+Exit status `0` means the pattern was found for the selected run; status `1`
+means it was not found or command-line arguments were invalid.
 
-## Implementation
+## Algorithm selection
 
-The file is read in 16 KiB blocks. Uses Abrash's brute force memchr()/memcmp() by default. `algorithm.h` contains other string-search algorithms for comparison.
+| Number | Implementation | Family |
+| ---: | --- | --- |
+| 1 | `SearchForString` | Abrash `memchr()` / `memcmp()` optimized brute force |
+| 2 | `bmsearch` | Boyer-Moore |
+| 3 | `strsearch` | Pratt/Boyer-Moore snippet |
+| 4 | `bmh_search` | Boyer-Moore-Horspool |
+| 5 | `SearchBF` | Brute force |
+| 6 | `SearchAUT` | Aho-like table/automaton implementation |
+| 7 | `SearchBM` | Boyer-Moore |
+| 8 | `SearchKMP` | Knuth-Morris-Pratt |
+| 9 | `SearchHORSPOOL` | Horspool |
+| 10 | `SearchGS` | Galil-Seiferas-style implementation |
+| 11 | `SearchQS` | Quick Search |
+| 12 | `SearchStdStringView` | C++ `std::string_view::find()` |
+| 13 | `SearchKMP_Textbook` | Textbook Knuth-Morris-Pratt |
+
+The benchmark repeats the complete block-search operation, not just an in-memory
+library call. Results vary by CPU, compiler, optimization settings, file layout,
+and whether the operating system already has the file cached. Use the absolute
+and average times as comparisons for the same machine and run, rather than as
+portable performance guarantees.
+
+## Source layout
+
+- `search.cpp`: command-line entry point, block management, benchmark loop, and
+  primary optimized search implementation.
+- `search.h`: declarations for the primary search function.
+- `algorithm.h`: Boyer-Moore, Horspool, KMP, brute-force, and other comparison
+  implementations.
+- `fsif.cpp` / `fsif.h`: 512-byte overlapping-block file search adapted from
+  Bob Stout's Code Snippets.
+- `parse.cpp` / `parse.h`: parser for algorithm ranges and lists such as `1-13`
+  and `1,4,10-12`.
+- `frames.txt`: sample binary/text fixture containing frame markers.
+- `test_all/`, `test_mmap/`, `test_memmove/`, and `test_dfa/`: focused experiments
+  and standalone prototypes.
+- `pdf/`: reference papers and algorithm notes.
+- `web/`: interactive browser visualizers and generated web experiments.
+
+## Implementation notes
+
+The main search routine reads up to 16 KiB at a time and carries pattern-length
+minus one bytes across block boundaries. This prevents a match that begins near
+one block's end and continues into the next block from being missed.
+
+The primary implementation first uses `memchr()` to find a possible first byte,
+then checks the remaining bytes with `memcmp()`. The algorithms in `algorithm.h`
+are included for comparison and may use different buffer-length conventions;
+`search.cpp` distinguishes the valid start-position count from the complete
+working-block length where necessary.
+
+Before the repeated benchmark starts, the program uses `find_str_in_file()` as
+an independent 512-byte-block check and prints the located position. The benchmark runs each selected implementation repeatedly and reports both the total and per-search elapsed time.
 
 ## Output
 
